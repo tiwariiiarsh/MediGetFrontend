@@ -1,5 +1,9 @@
+const savedUser = localStorage.getItem("auth")
+  ? JSON.parse(localStorage.getItem("auth"))
+  : null;
+
 const initialState = {
-  user: null,
+  user: savedUser,
   address: [],
   clientSecret: null,
   selectedUserCheckoutAddress: null,
@@ -7,7 +11,9 @@ const initialState = {
 
 export const authReducer = (state = initialState, action) => {
   switch (action.type) {
+
     case "LOGIN_USER":
+      localStorage.setItem("auth", JSON.stringify(action.payload));
       return { ...state, user: action.payload };
 
     case "USER_ADDRESS":
@@ -33,10 +39,12 @@ export const authReducer = (state = initialState, action) => {
       };
 
     case "LOG_OUT":
+      localStorage.removeItem("auth");
       return {
-        ...state,
         user: null,
         address: [],
+        clientSecret: null,
+        selectedUserCheckoutAddress: null,
       };
 
     default:

@@ -5,9 +5,9 @@ import FooterBrand from "../components/FooterBrand";
 
 const Home = () => {
   return (
-    <div className=" mt-20">
-      <FooterBrand />
-    <section className=" px-[8vw] mt-7 flex flex-col-reverse md:flex-row items-center justify-between text-white">
+    <div className=" mt-0">
+      {/* <FooterBrand /> */}
+    <section className=" px-[8vw] mt-45  mb-10 py-15 flex flex-col-reverse md:flex-row items-center justify-between text-white">
 
       {/* LEFT SIDE */}
       <div className="md:w-1/2 mt-10 md:mt-0">
@@ -101,7 +101,7 @@ const Home = () => {
       </div>
       
     </section>
-    {/* <FooterBrand /> */}
+    {/* <FooterBrand  /> */}
     </div>
   );
 };

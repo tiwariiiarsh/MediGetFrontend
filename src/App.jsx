@@ -4,6 +4,8 @@ import Home from "./pages/Home";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import BlurBlob from "./components/BlurBlob";
+import Footer from "./components/Footer";
+import FooterBrand from "./components/FooterBrand";
 
 function App() {
   return (
@@ -26,6 +28,8 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
       </Routes>
+      <FooterBrand  />
+      <Footer/>
 
     </div>
   );
