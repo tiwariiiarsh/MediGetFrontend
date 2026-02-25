@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import vitaminc from "../assets/vitamin c.jpeg";
 
 const Medicines = () => {
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ const Medicines = () => {
   }, []);
 
   // ================= FETCH PAGINATED =================
-  const fetchMedicines = async (pageNumber = 0, pageSize = 4) => {
+  const fetchMedicines = async (pageNumber = 0, pageSize = 12) => {
     try {
       setLoading(true);
       setIsSearching(false);
@@ -169,7 +169,8 @@ const Medicines = () => {
                 >
                   <div className="h-40 bg-[#1e293b] rounded-xl overflow-hidden">
                     <img
-                      src={med.image}
+                      // src={med.image}
+                      src={vitaminc}
                       alt={med.medicineName}
                       className="h-full w-full object-cover"
                     />
