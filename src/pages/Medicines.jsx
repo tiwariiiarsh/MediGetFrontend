@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 
 const Medicines = () => {
+  const navigate = useNavigate();
   const [medicines, setMedicines] = useState([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -10,8 +13,29 @@ const Medicines = () => {
   const [radius, setRadius] = useState(5);
   const [isSearching, setIsSearching] = useState(false);
 
-  const userLat = 28.61;
-  const userLng = 77.2;
+  const [userLocation, setUserLocation] = useState(null);
+  const [locationError, setLocationError] = useState("");
+
+  // ================= GET USER LOCATION =================
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation not supported by browser.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      (error) => {
+        setLocationError("Location permission denied.");
+        console.error(error);
+      }
+    );
+  }, []);
 
   // ================= FETCH PAGINATED =================
   const fetchMedicines = async (pageNumber = 0, pageSize = 4) => {
@@ -37,19 +61,24 @@ const Medicines = () => {
 
   // ================= SEARCH NEARBY =================
   const handleSearch = async () => {
+    if (!userLocation) {
+      alert("Please enable location to search nearby medicines.");
+      return;
+    }
+
     try {
       setLoading(true);
       setIsSearching(true);
       setPage(0);
 
       const res = await fetch(
-        `http://localhost:8080/api/public/medicines/nearby?keyword=${keyword}&userLat=${userLat}&userLng=${userLng}&radiusKm=${radius}`
+        `http://localhost:8080/api/public/medicines/nearby?keyword=${keyword}&userLat=${userLocation.lat}&userLng=${userLocation.lng}&radiusKm=${radius}`
       );
 
       const data = await res.json();
 
       setMedicines(Array.isArray(data) ? data : []);
-      setTotalPages(0); // pagination off in search
+      setTotalPages(0);
 
       setLoading(false);
     } catch (err) {
@@ -58,7 +87,16 @@ const Medicines = () => {
     }
   };
 
-  // Load pagination only if not searching
+  // ================= RESET =================
+  const handleReset = () => {
+    setKeyword("");
+    setRadius(5);
+    setIsSearching(false);
+    setPage(0);
+    fetchMedicines(0);
+  };
+
+  // ================= AUTO LOAD PAGINATION =================
   useEffect(() => {
     if (!isSearching) {
       fetchMedicines(page);
@@ -67,6 +105,11 @@ const Medicines = () => {
 
   return (
     <div className="min-h-screen px-[8vw] pt-32 pb-20 text-white">
+
+      {/* ================= LOCATION STATUS ================= */}
+      {locationError && (
+        <p className="text-red-400 mb-4">{locationError}</p>
+      )}
 
       {/* ================= SEARCH SECTION ================= */}
       <div className="bg-[#0f172a] p-6 rounded-xl mb-12 border border-white/10">
@@ -94,16 +137,11 @@ const Medicines = () => {
                        bg-gradient-to-r from-emerald-400 to-cyan-400
                        text-black hover:scale-105 transition"
           >
-            Search
+            Search Nearby
           </button>
 
           <button
-            onClick={() => {
-              setKeyword("");
-              setRadius(5);
-              setIsSearching(false);
-              fetchMedicines(0);
-            }}
+            onClick={handleReset}
             className="px-6 py-3 rounded-lg bg-red-700"
           >
             Reset
@@ -129,7 +167,6 @@ const Medicines = () => {
                              hover:shadow-[0_0_30px_rgba(16,185,129,0.25)]
                              hover:scale-105 transition duration-300"
                 >
-                  {/* IMAGE */}
                   <div className="h-40 bg-[#1e293b] rounded-xl overflow-hidden">
                     <img
                       src={med.image}
@@ -160,14 +197,8 @@ const Medicines = () => {
                     </span>
                   </div>
 
-                  {/* SHOP INFO */}
                   <div className="mt-3 text-sm text-gray-400">
-                    <p>
-                      🏥 <span className="text-white">
-                        {med.shopName}
-                      </span>
-                    </p>
-
+                    <p>🏥 {med.shopName}</p>
                     <p>📍 {med.shopCity}</p>
 
                     {med.distance !== null &&
@@ -178,13 +209,30 @@ const Medicines = () => {
                       )}
                   </div>
 
-                  <button
+                  {/* <button
                     className="mt-4 w-full py-2 rounded-xl
                                bg-gradient-to-r from-emerald-400 to-cyan-400
                                text-black font-semibold"
                   >
                     Check Shop
-                  </button>
+                  </button> */}
+                  {/* console.log(med); */}
+                 <button
+  onClick={() => {
+    if (med.shopId) {
+      navigate(`/shop/${med.shopId}`);
+    } else {
+      alert("Shop ID not available");
+    }
+  }}
+  className="mt-4 w-full py-2 rounded-xl
+             bg-gradient-to-r from-emerald-400 to-cyan-400
+             text-black font-semibold"
+>
+  Check Shop
+</button>
+
+                  
                 </div>
               ))
             )}
@@ -224,7 +272,6 @@ const Medicines = () => {
               </button>
             </div>
           )}
-
         </>
       )}
     </div>
@@ -232,12 +279,6 @@ const Medicines = () => {
 };
 
 export default Medicines;
-
-
-
-
-
-
 
 
 

@@ -9,6 +9,7 @@ import FooterBrand from "./components/FooterBrand";
 import Medicines from "./pages/Medicines";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import ShopDetails from "./pages/ShopDetails";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
         <Route path="/medicines" element={<Medicines />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/shop/:shopId" element={<ShopDetails />} />
       </Routes>
       <FooterBrand  />
       <Footer/>

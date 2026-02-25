@@ -79,6 +79,7 @@ const Navbar = () => {
             <>
               <li onClick={() => navigate("/")} className={navItemClass}>Home</li>
               <li onClick={() => navigate("/medicines")} className={navItemClass}>Medicines</li>
+               <li onClick={() => navigate("/shop/:shopId")} className={navItemClass}>ShopDetails</li>
               <li onClick={() => navigate("/about")} className={navItemClass}>About</li>
               <li onClick={() => navigate("/contact")} className={navItemClass}>Contact</li>
             </>
