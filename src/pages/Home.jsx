@@ -1,7 +1,9 @@
 import { TypeAnimation } from "react-type-animation";
 import Tilt from "react-parallax-tilt";
 import medicalImage from "../assets/image.png";
-import FooterBrand from "../components/FooterBrand";
+// import FooterBrand from "../components/FooterBrand";
+// import CountingFromNumberDemo from "../components/CountingFromNumberDemo";
+import StatsSection from "../components/StatsSections";
 
 const Home = () => {
   return (
@@ -102,6 +104,8 @@ const Home = () => {
       
     </section>
     {/* <FooterBrand  /> */}
+    <StatsSection />
+    {/* <CountingFromNumberDemo number={100}/> */}
     </div>
   );
 };
