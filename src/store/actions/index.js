@@ -1,4 +1,5 @@
 import api from "../../api/api";
+import Medicines from "../../pages/Medicines";
 
 // LOGIN
 export const authenticateSignInUser =
@@ -61,47 +62,50 @@ export const logOutUser = (navigate) => (dispatch) => {
 };
 
 
-// FETCH PAGINATED
-export const fetchMedicines =
-  (page = 0) =>
-  async (dispatch) => {
-    try {
-      dispatch({ type: "MEDICINE_LOADING" });
+// // FETCH PAGINATED
+// export const fetchMedicines =
+//   (page = 0) =>
+//   async (dispatch) => {
+//     try {
+//       dispatch({ type: "MEDICINE_LOADING" });
 
-      const { data } = await api.get(
-        `/public/medicines?pageNumber=${page}&pageSize=8&sortBy=medicineId&sortOrder=asc`
-      );
+//       const { data } = await api.get(
+//         `/public/medicines?pageNumber=${page}&pageSize=8&sortBy=medicineId&sortOrder=asc`
+//       );
 
-      dispatch({
-        type: "SET_MEDICINES",
-        payload: data,
-      });
+//       dispatch({
+//         type: "SET_MEDICINES",
+//         payload: {
+//           medicines: data.content,   // ✅ correct key
+//           page: data.pageNumber,
+//           totalPages: data.totalPages,
+//           totalElements: data.totalElements,
+//         },
+//       });
 
-    } catch (error) {
-      console.log(error);
-      dispatch({ type: "MEDICINE_ERROR" });
-    }
-  };
+//     } catch (error) {
+//       console.log(error);
+//       dispatch({ type: "MEDICINE_ERROR" });
+//     }
+//   };
+// // SEARCH NEARBY
+// export const searchNearbyMedicines =
+//   (keyword, userLat, userLng, radius) =>
+//   async (dispatch) => {
+//     try {
+//       dispatch({ type: "MEDICINE_LOADING" });
 
+//       const { data } = await api.get(
+//         `/public/medicines/nearby?keyword=${keyword}&userLat=${userLat}&userLng=${userLng}&radiusKm=${radius}`
+//       );
 
-// SEARCH NEARBY
-export const searchNearbyMedicines =
-  (keyword, userLat, userLng, radius) =>
-  async (dispatch) => {
-    try {
-      dispatch({ type: "MEDICINE_LOADING" });
+//       dispatch({
+//         type: "SET_SEARCH_MEDICINES",
+//         payload: data, // array
+//       });
 
-      const { data } = await api.get(
-        `/public/medicines/nearby?keyword=${keyword}&userLat=${userLat}&userLng=${userLng}&radiusKm=${radius}`
-      );
-
-      dispatch({
-        type: "SET_SEARCH_MEDICINES",
-        payload: data,
-      });
-
-    } catch (error) {
-      console.log(error);
-      dispatch({ type: "MEDICINE_ERROR" });
-    }
-  };
+//     } catch (error) {
+//       console.log(error);
+//       dispatch({ type: "MEDICINE_ERROR" });
+//     }
+//   };

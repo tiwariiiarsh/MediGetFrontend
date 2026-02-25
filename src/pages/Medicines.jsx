@@ -14,13 +14,13 @@ const Medicines = () => {
   const userLng = 77.2;
 
   // ================= FETCH PAGINATED =================
-  const fetchMedicines = async (pageNumber = 0) => {
+  const fetchMedicines = async (pageNumber = 0, pageSize = 4) => {
     try {
       setLoading(true);
       setIsSearching(false);
 
       const res = await fetch(
-        `http://localhost:8080/api/public/medicines?pageNumber=${pageNumber}&pageSize=4`
+        `http://localhost:8080/api/public/medicines?pageNumber=${pageNumber}&pageSize=${pageSize}`
       );
 
       const data = await res.json();
@@ -232,3 +232,73 @@ const Medicines = () => {
 };
 
 export default Medicines;
+
+
+
+
+
+
+
+
+
+// import { FaExclamationTriangle } from "react-icons/fa";
+// import { useSelector } from "react-redux";
+// import Filter from "../components/Filter";
+// import MedicineCard from "../components/MedicineCard";
+// import Loader from "../shared/Loader";
+// import Paginations from "../components/Pagination";
+
+// const Medicines = () => {
+
+//   const { medicines, pagination } = useSelector(
+//     (state) => state.medicine
+//   );
+
+//   const { isLoading, errorMessage } = useSelector(
+//     (state) => state.error
+//   );
+
+//   // 🔥 Custom hook handles fetching
+//   Filter();
+
+//   return (
+//     <div className="lg:px-14 sm:px-8 px-4 py-14 bg-gray-800 min-h-screen">
+
+//       {/* FILTER */}
+//       <Filter />
+
+//       {isLoading ? (
+//         <Loader />
+//       ) : errorMessage ? (
+//         <div className="flex justify-center items-center h-[200px]">
+//           <FaExclamationTriangle className="text-slate-800 text-3xl mr-2" />
+//           <span className="text-slate-800 text-lg font-medium">
+//             {errorMessage}
+//           </span>
+//         </div>
+//       ) : (
+//         <div className="min-h-[700px]">
+
+//           {/* GRID */}
+//           <div className="pb-6 pt-14 grid 2xl:grid-cols-4 lg:grid-cols-4 sm:grid-cols-3 gap-y-6 gap-x-6">
+//             {medicines &&
+//               medicines.map((item) => (
+//                 <MedicineCard key={item.medicineId} {...item} />
+//               ))}
+//           </div>
+
+//           {/* PAGINATION */}
+//           <div className="flex justify-center pt-10">
+//             <Paginations
+//               numberOfPage={pagination?.totalPages}
+//               totalProducts={pagination?.totalElements}
+//             />
+//           </div>
+
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default Medicines;
