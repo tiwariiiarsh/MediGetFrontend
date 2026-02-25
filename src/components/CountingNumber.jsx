@@ -47,8 +47,8 @@ const CountingNumber = ({ number = 0, duration = 2000 }) => {
     <span
       ref={ref}
       className="text-4xl md:text-5xl font-bold 
-                 bg-gradient-to-r from-emerald-400 to-cyan-400 
-                 bg-clip-text text-transparent"
+        bg-gradient-to-r from-emerald-400 to-cyan-400 
+        bg-clip-text text-transparent"
     >
       {count}+
     </span>
