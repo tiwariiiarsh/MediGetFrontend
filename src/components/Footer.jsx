@@ -1,74 +1,174 @@
+// src/components/Footer.jsx
+// ─────────────────────────────────────────────────────────────────────────────
+// Theme-aware Footer + FooterBrand — dark/light, blue + black + white only.
+// No gradients. Uses ThemeContext.
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { Link } from "react-router-dom";
+import { useTheme } from "../components/ThemeContext";
 
-export default function Footer() {
+// ─── FOOTER BRAND (big background text) ──────────────────────────────────────
+export const FooterBrand = () => {
+  const { t } = useTheme();
   return (
-    <footer className="relative mt-15">
+    <div style={{ position:"relative", width:"100%", overflow:"hidden", userSelect:"none" }}>
+      {/* Divider line */}
+      <div style={{ width:"100%", display:"flex", justifyContent:"center", marginBottom:40 }}>
+        <div style={{ height:1, width:"85%", background:`linear-gradient(90deg, transparent, ${t.border === "rgba(255,255,255,0.08)" ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.18)"}, transparent)` }} />
+      </div>
 
-      {/* TOP SOFT DIVIDER */}
-      <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-5" />
+      {/* Big BG text */}
+      <h1 style={{
+        textAlign:      "center",
+        fontFamily:     "'Archivo',sans-serif",
+        fontWeight:     900,
+        letterSpacing:  "0.18em",
+        fontSize:       "14vw",
+        lineHeight:     1,
+        color:          t.text,
+        opacity:        0.04,
+        filter:         "blur(1px)",
+        pointerEvents:  "none",
+        margin:         0,
+      }}>
+        MEDICARE
+      </h1>
+    </div>
+  );
+};
+
+// ─── MAIN FOOTER ──────────────────────────────────────────────────────────────
+const Footer = () => {
+  const { t } = useTheme();
+
+  const colHead = {
+    fontFamily: "'Archivo',sans-serif",
+    fontSize:   10.5, fontWeight:700,
+    letterSpacing:"0.12em", textTransform:"uppercase",
+    color: t.textFaint, marginBottom:16,
+  };
+
+  const linkStyle = {
+    display:    "block",
+    fontFamily: "'Archivo',sans-serif",
+    fontSize:   13.5,
+    color:      t.textMuted,
+    textDecoration: "none",
+    marginBottom: 10,
+    transition: "color 0.15s",
+  };
+
+  return (
+    <footer style={{ background:t.footerBg, borderTop:`1px solid ${t.border}`, marginTop:0 }}>
+
+      {/* BIG BG BRAND TEXT */}
+      <FooterBrand />
+
+      {/* TOP DIVIDER */}
+      <div style={{ height:1, background:t.border, marginBottom:0 }} />
 
       {/* FOOTER BODY */}
-      <div
-        className="
-          max-w-7xl mx-auto
-          px-10 py-14
-          backdrop-blur-xl
-         bg-[#04111d68]
-          
-          
-          shadow-[0_20px_60px_rgba(0,0,0,0.6)]
-        "
-      >
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 text-white">
+      <div style={{
+        maxWidth:   1280,
+        margin:     "0 auto",
+        padding:    "52px 8vw 28px",
+      }}>
+        <div style={{
+          display:"grid",
+          gridTemplateColumns:"1.6fr 1fr 1fr 1fr",
+          gap:44,
+          marginBottom:44,
+        }}>
 
-          {/* BRAND */}
+          {/* ── BRAND COL ── */}
           <div>
-            <h2 className="text-2xl font-extrabold bg-gradient-to-r from-white to-indigo-300 bg-clip-text text-transparent">
-              MEDICARE
-            </h2>
-            <p className="text-gray-400 mt-3 text-sm leading-relaxed">
-              “Connecting patients and pharmacies with reliable medicines, real-time stock updates, and fast delivery — your health, simplified.”
+            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
+              <div style={{ width:36, height:36, background:t.blue, borderRadius:9, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Archivo',sans-serif", fontWeight:900, fontSize:20, color:"#fff" }}>+</div>
+              <span style={{ fontFamily:"'Archivo',sans-serif", fontWeight:800, fontSize:16, color:t.text, letterSpacing:"-0.02em" }}>MediCare</span>
+            </div>
+            <p style={{ fontFamily:"'Archivo',sans-serif", fontSize:13, color:t.textMuted, lineHeight:1.75, maxWidth:220, marginBottom:18 }}>
+              Connecting patients and pharmacies with reliable medicines, real-time stock updates — your health, simplified.
             </p>
+
+            {/* Status badge */}
+            <div style={{ display:"inline-flex", alignItems:"center", gap:6, border:`1px solid ${t.border}`, borderRadius:100, padding:"5px 14px" }}>
+              <span style={{ width:6, height:6, borderRadius:"50%", background:"#22c55e" }} />
+              <span style={{ fontFamily:"'Archivo',sans-serif", fontSize:11, fontWeight:600, color:t.textMuted }}>System Operational</span>
+            </div>
           </div>
 
-          {/* QUICK LINKS */}
+          {/* ── EXPLORE ── */}
           <div>
-            <h3 className="font-semibold mb-4">Explore</h3>
-            <ul className="space-y-2 text-gray-400 text-sm">
-              <li><Link to="/" className="hover:text-white">Home</Link></li>
-              <li><Link to="/" className="hover:text-white"> Medicines</Link></li>
-              <li><Link to="/" className="hover:text-white">Contact Us</Link></li>
-            </ul>
+            <p style={colHead}>Explore</p>
+            {[["Home","/"],["Medicines","/medicines"],["About","/about"],["Contact","/contact"]].map(([label,path])=>(
+              <Link key={path} to={path} style={linkStyle}
+                onMouseEnter={e=>e.currentTarget.style.color=t.blue}
+                onMouseLeave={e=>e.currentTarget.style.color=t.textMuted}
+              >{label}</Link>
+            ))}
           </div>
 
-          {/* ACCOUNT */}
+          {/* ── ACCOUNT ── */}
           <div>
-            <h3 className="font-semibold mb-4">Account</h3>
-            <ul className="space-y-2 text-gray-400 text-sm">
-              <li><Link to="/login" className="hover:text-white">Login</Link></li>
-              <li><Link to="/signup" className="hover:text-white">Signup</Link></li>
-              <li><Link to="/user" className="hover:text-white">Your Profile</Link></li>
-            </ul>
+            <p style={colHead}>Account</p>
+            {[["Login","/login"],["Sign Up","/signup"],["Your Profile","/user"],["Register Pharmacy","/signup"]].map(([label,path])=>(
+              <Link key={label} to={path} style={linkStyle}
+                onMouseEnter={e=>e.currentTarget.style.color=t.blue}
+                onMouseLeave={e=>e.currentTarget.style.color=t.textMuted}
+              >{label}</Link>
+            ))}
           </div>
 
-          {/* SUPPORT */}
+          {/* ── SUPPORT ── */}
           <div>
-            <h3 className="font-semibold mb-4">Support</h3>
-            <p className="text-gray-400 text-sm">
+            <p style={colHead}>Support</p>
+            <p style={{ fontFamily:"'Archivo',sans-serif", fontSize:13.5, color:t.textMuted, lineHeight:1.7, marginBottom:12 }}>
               Need help or have questions?
             </p>
-            <p className="mt-2 text-sm font-semibold text-indigo-400">
-              support@medicare.com
-            </p>
-          </div>
+            <a
+              href="mailto:support@medicare.com"
+              style={{ ...linkStyle, color:t.blue, fontWeight:600, marginBottom:8 }}
+              onMouseEnter={e=>e.currentTarget.style.opacity="0.75"}
+              onMouseLeave={e=>e.currentTarget.style.opacity="1"}
+            >support@medicare.com</a>
+            <p style={{ fontFamily:"'Archivo',sans-serif", fontSize:12, color:t.textFaint, marginTop:6 }}>Mon–Sat · 10:00–19:00 IST</p>
 
+            {/* Social icons row */}
+            <div style={{ display:"flex", gap:10, marginTop:16 }}>
+              {[
+                { label:"in", href:"#" },
+                { label:"ig", href:"#" },
+                { label:"wa", href:"#" },
+              ].map(({label,href})=>(
+                <a key={label} href={href} style={{
+                  width:32, height:32, borderRadius:"50%",
+                  border:`1px solid ${t.border}`,
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  fontFamily:"'Archivo',sans-serif", fontSize:10, fontWeight:700,
+                  color:t.textMuted, textDecoration:"none",
+                  transition:"all 0.2s",
+                  textTransform:"uppercase",
+                }}
+                  onMouseEnter={e=>{ e.currentTarget.style.borderColor=t.blue; e.currentTarget.style.color=t.blue; }}
+                  onMouseLeave={e=>{ e.currentTarget.style.borderColor=t.border; e.currentTarget.style.color=t.textMuted; }}
+                >{label}</a>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* BOTTOM BAR */}
-        <div className="mt-12 pt-6 border-t border-white/10 text-center text-gray-500 text-sm">
-          © {new Date().getFullYear()} Medicare. All rights reserved.
+        {/* ── BOTTOM BAR ── */}
+        <div style={{ borderTop:`1px solid ${t.border}`, paddingTop:22, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:12 }}>
+          <p style={{ fontFamily:"'Archivo',sans-serif", fontSize:12, color:t.textFaint }}>
+            © {new Date().getFullYear()} MediCare. All rights reserved.
+          </p>
+          <p style={{ fontFamily:"'Archivo',sans-serif", fontSize:12, color:t.textFaint }}>
+            🇮🇳 Made in India · Built for Maharashtra
+          </p>
         </div>
       </div>
     </footer>
   );
-}
+};
+
+export default Footer;

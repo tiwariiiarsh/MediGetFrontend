@@ -11,3 +11,10 @@
 .animate-marquee {
   animation: marquee 18s linear infinite;
 }
+
+.shapegrid-canvas {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}

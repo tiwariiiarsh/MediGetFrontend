@@ -64,15 +64,29 @@ import SellerDashboard from "./pages/seller/SellerDashboard";
 import SellerMedicines from "./pages/seller/SellerMedicines";
 import SellerBilling from "./pages/seller/SellerBilling";
 import SellerAnalytics from "./pages/seller/SellerAnalytics";
+import { ThemeProvider } from "./components/ThemeContext";
 
 function App() {
   return (
     <div className="bg-[#04111d] relative overflow-hidden min-h-screen text-white">
+      <ThemeProvider>
       <Navbar />
-      <BlurBlob
-        position={{ top: "40%", left: "20%" }}
+      {/* <BlurBlob
+        position={{ top: "80%", left: "40%" }}
         size={{ width: "500px", height: "400px" }}
-      />
+      /> */}
+      <BlurBlob
+              blobs={[
+                {
+                  top: "13%",
+                  left: "50%",
+                  width: "750px",
+                  height: "300px",
+                  color: "bg-blue-500",
+                  delay: "5s",
+                },
+              ]}
+            />
       <Routes>
         {/* PUBLIC */}
         <Route path="/" element={<Home />} />
@@ -89,8 +103,9 @@ function App() {
         <Route path="/seller/billing" element={<SellerBilling />} />
         <Route path="/seller/analytics" element={<SellerAnalytics />} />
       </Routes>
-      <FooterBrand />
+      {/* <FooterBrand /> */}
       <Footer />
+      </ThemeProvider>
     </div>
   );
 }

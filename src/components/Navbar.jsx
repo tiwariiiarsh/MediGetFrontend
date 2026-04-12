@@ -1,157 +1,369 @@
-// src/components/Navbar.jsx — UPDATED with billing + analytics nav links
+// src/components/Navbar.jsx
+// ─────────────────────────────────────────────────────────────────────────────
+// Theme-aware Navbar — dark/light toggle built in.
+// Reads theme from ThemeContext. Blue + black + white only — no gradients.
+// Fonts: Archivo (same as Home.jsx)
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { logOutUser } from "../store/actions";
-import { FiMenu, FiX } from "react-icons/fi";
-import { useEffect, useState } from "react";
+import { useTheme } from "../components/ThemeContext";
 
 const Navbar = () => {
-  const user = useSelector((state) => state.auth.user);
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const user      = useSelector((s) => s.auth.user);
+  const dispatch  = useDispatch();
+  const navigate  = useNavigate();
+  const location  = useLocation();
+  const { dark, toggle, t } = useTheme();
 
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled,  setScrolled]  = useState(false);
+  const [menuOpen,  setMenuOpen]  = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
+  // Hide on login / signup pages
   if (location.pathname === "/login" || location.pathname === "/signup") return null;
 
+  // Scroll detection
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const handleLogout = () => dispatch(logOutUser(navigate));
+  const handleLogout = () => {
+    dispatch(logOutUser(navigate));
+    setMenuOpen(false);
+    setProfileOpen(false);
+  };
 
   const role = user?.roles?.[0] || user?.role?.[0] || null;
 
-  const navItem = (label, path) => (
-    <li
-      key={path}
-      onClick={() => { navigate(path); setMenuOpen(false); }}
-      className={`cursor-pointer transition text-sm font-medium
-        ${location.pathname === path
-          ? "text-emerald-400"
-          : "text-gray-300 hover:text-emerald-400"
-        }`}
-    >
-      {label}
-    </li>
-  );
+  // ─── NAV LINKS PER ROLE ────────────────────────────────────────────────────
+  const publicLinks  = [["Home","/"],["Medicines","/medicines"],["About","/about"],["Contact","/contact"]];
+  const sellerLinks  = [["Dashboard","/seller"],["Inventory","/seller/medicines"],["Billing","/seller/billing"],["Analytics","/seller/analytics"]];
+  const userLinks    = [["Home","/"],["Medicines","/medicines"],["About","/about"],["Contact","/contact"]];
+  const activeLinks  = !user ? publicLinks : role === "ROLE_SELLER" ? sellerLinks : userLinks;
 
-  const publicLinks = [
-    navItem("Home", "/"),
-    navItem("Medicines", "/medicines"),
-    navItem("About", "/about"),
-    navItem("Contact", "/contact"),
-  ];
+  const isActive = (path) => location.pathname === path;
 
-  const sellerLinks = [
-    navItem("Dashboard", "/seller"),
-    navItem("Inventory", "/seller/medicines"),
-    navItem("Billing", "/seller/billing"),
-    navItem("Analytics", "/seller/analytics"),
-  ];
+  // ─── STYLE HELPERS ────────────────────────────────────────────────────────
+  const linkStyle = (path) => ({
+    fontFamily:  "'Archivo',sans-serif",
+    fontSize:    13,
+    fontWeight:  isActive(path) ? 700 : 400,
+    color:       isActive(path) ? t.blue : t.textMuted,
+    textDecoration: "none",
+    borderBottom: isActive(path) ? `2px solid ${t.blue}` : "none",
+    paddingBottom: isActive(path) ? 2 : 0,
+    cursor:      "pointer",
+    transition:  "color 0.18s",
+    background:  "none",
+    border:      isActive(path) ? `0 0 0 0` : "none",
+    padding:     "0",
+  });
 
-  const userLinks = [
-    navItem("Home", "/"),
-    navItem("Medicines", "/medicines"),
-    navItem("About", "/about"),
-    navItem("Contact", "/contact"),
-  ];
+  const navBg = scrolled
+    ? `${t.navBg}`
+    : dark ? "rgba(0,0,0,0)" : "rgba(245,242,235,0)";
 
-  const activeLinks = !user ? publicLinks
-    : role === "ROLE_SELLER" ? sellerLinks
-    : userLinks;
+  const navBorder = scrolled ? `1px solid ${t.border}` : "1px solid transparent";
 
   return (
-    <nav
-      className={`fixed top-0 w-full z-50 transition-all duration-500 ${
-        isScrolled
-          ? "bg-[#04111d]/80 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.5)] border-b border-white/10"
-          : "bg-transparent"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <>
+      <style>{`
+        @keyframes mc-slide-down { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+        .mc-nav-link:hover { color: ${t.blue} !important; }
+        .mc-mobile-link:hover { color: ${t.blue} !important; }
+      `}</style>
 
-        {/* LOGO */}
-        <div onClick={() => navigate("/")}
-          className="text-2xl font-extrabold cursor-pointer tracking-tight">
-          <span className="text-emerald-400">Medi</span>
-          <span className="text-cyan-400">Care</span>
-        </div>
+      <nav style={{
+        position:       "fixed",
+        top:            0,
+        width:          "100%",
+        zIndex:         100,
+        background:     navBg,
+        backdropFilter: scrolled ? "blur(14px)" : "none",
+        borderBottom:   navBorder,
+        transition:     "background 0.4s, border-color 0.4s, backdrop-filter 0.4s",
+      }}>
+        <div style={{
+          maxWidth:       1280,
+          margin:         "0 auto",
+          padding:        "0 6vw",
+          height:         62,
+          display:        "flex",
+          alignItems:     "center",
+          justifyContent: "space-between",
+        }}>
 
-        {/* CENTER LINKS (desktop) */}
-        <ul className="hidden md:flex items-center space-x-7">
-          {activeLinks}
-        </ul>
+          {/* ── LOGO ── */}
+          <div
+            onClick={() => navigate("/")}
+            style={{ display:"flex", alignItems:"center", gap:10, cursor:"pointer" }}
+          >
+            <div style={{
+              width:36, height:36,
+              background: t.blue,
+              borderRadius: 9,
+              display:"flex", alignItems:"center", justifyContent:"center",
+              fontFamily:"'Archivo',sans-serif", fontWeight:900, fontSize:20, color:"#fff",
+            }}>+</div>
+            <span style={{
+              fontFamily: "'Archivo',sans-serif",
+              fontWeight: 800, fontSize: 16,
+              color: t.text,
+              letterSpacing: "-0.025em",
+            }}>MediCare</span>
+          </div>
 
-        {/* RIGHT (desktop) */}
-        <div className="hidden md:flex items-center gap-4">
-          {!user ? (
-            <button
-              onClick={() => navigate("/login")}
-              className="px-5 py-2 rounded-full text-sm font-semibold text-black
-                         bg-gradient-to-r from-emerald-400 to-cyan-400
-                         hover:scale-105 transition shadow-[0_0_20px_rgba(16,185,129,0.4)]"
-            >
-              Login
-            </button>
-          ) : (
-            <div className="flex items-center gap-4">
-              <div
-                onClick={() => navigate("/seller")}
-                className="w-9 h-9 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400
-                           flex items-center justify-center text-black font-bold shadow-md cursor-pointer
-                           hover:scale-110 transition"
-              >
-                {user.username?.charAt(0).toUpperCase()}
-              </div>
-              <button
-                onClick={handleLogout}
-                className="text-sm text-red-400 hover:text-red-300 transition"
-              >
-                Logout
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* MOBILE MENU BUTTON */}
-        <button
-          className="md:hidden text-2xl text-gray-300"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          {menuOpen ? <FiX /> : <FiMenu />}
-        </button>
-      </div>
-
-      {/* MOBILE MENU */}
-      {menuOpen && (
-        <div className="md:hidden bg-[#0f172a] border-t border-white/10 px-6 py-5 space-y-4">
-          <ul className="flex flex-col gap-4">
-            {activeLinks}
+          {/* ── DESKTOP LINKS ── */}
+          <ul style={{ display:"flex", alignItems:"center", gap:28, listStyle:"none", padding:0, margin:0 }}>
+            {activeLinks.map(([label, path]) => (
+              <li key={path}>
+                <span
+                  className="mc-nav-link"
+                  onClick={() => navigate(path)}
+                  style={linkStyle(path)}
+                >{label}</span>
+              </li>
+            ))}
           </ul>
-          {!user ? (
+
+          {/* ── RIGHT: TOGGLE + AUTH ── */}
+          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+
+            {/* THEME TOGGLE */}
             <button
-              onClick={() => { navigate("/login"); setMenuOpen(false); }}
-              className="w-full py-2.5 rounded-xl text-sm font-semibold text-black
-                         bg-gradient-to-r from-emerald-400 to-cyan-400"
+              onClick={toggle}
+              style={{
+                display:        "flex",
+                alignItems:     "center",
+                gap:            7,
+                background:     t.bgCard,
+                border:         `1px solid ${t.border}`,
+                borderRadius:   100,
+                padding:        "7px 15px",
+                cursor:         "pointer",
+                fontFamily:     "'Archivo',sans-serif",
+                fontSize:       12,
+                fontWeight:     600,
+                color:          t.textMuted,
+                transition:     "all 0.2s",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = t.blue; e.currentTarget.style.color = t.blue; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.textMuted; }}
             >
-              Login
+              <span style={{ fontSize:14 }}>{dark ? "☀️" : "🌙"}</span>
+              {dark ? "Light" : "Dark"}
             </button>
-          ) : (
+
+            {/* NOT LOGGED IN */}
+            {!user && (
+              <button
+                onClick={() => navigate("/login")}
+                style={{
+                  padding:    "9px 22px",
+                  borderRadius: 12,
+                  background: t.blue,
+                  color:      "#fff",
+                  fontFamily: "'Archivo',sans-serif",
+                  fontWeight: 700,
+                  fontSize:   13,
+                  border:     "none",
+                  cursor:     "pointer",
+                  transition: "opacity 0.2s",
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
+                onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+              >Login →</button>
+            )}
+
+            {/* LOGGED IN */}
+            {user && (
+              <div style={{ position:"relative" }}>
+                <div
+                  onClick={() => setProfileOpen(!profileOpen)}
+                  style={{
+                    width:        38, height:38,
+                    borderRadius: "50%",
+                    background:   t.blue,
+                    display:      "flex", alignItems:"center", justifyContent:"center",
+                    fontFamily:   "'Archivo',sans-serif",
+                    fontWeight:   800, fontSize:14,
+                    color:        "#fff",
+                    cursor:       "pointer",
+                    border:       `2px solid ${t.blueBorder}`,
+                    transition:   "opacity 0.2s",
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = "0.8"}
+                  onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+                >
+                  {user.username?.charAt(0).toUpperCase() || "U"}
+                </div>
+
+                {/* PROFILE DROPDOWN */}
+                {profileOpen && (
+                  <div style={{
+                    position:   "absolute",
+                    top:        46,
+                    right:      0,
+                    background: t.bgCard,
+                    border:     `1px solid ${t.border}`,
+                    borderRadius: 14,
+                    padding:    "8px 0",
+                    minWidth:   180,
+                    animation:  "mc-slide-down 0.2s ease",
+                    boxShadow:  dark ? "0 8px 40px rgba(0,0,0,0.6)" : "0 8px 40px rgba(0,0,0,0.12)",
+                    zIndex:     200,
+                  }}>
+                    {/* Username header */}
+                    <div style={{ padding:"10px 16px 8px", borderBottom:`1px solid ${t.border}` }}>
+                      <p style={{ fontFamily:"'Archivo',sans-serif", fontWeight:700, fontSize:13, color:t.text }}>{user.username}</p>
+                      <p style={{ fontFamily:"'Archivo',sans-serif", fontSize:11, color:t.textFaint, marginTop:2 }}>{role === "ROLE_SELLER" ? "Pharmacy Owner" : "Patient"}</p>
+                    </div>
+
+                    {[
+                      ["My Profile",  role === "ROLE_SELLER" ? "/seller" : "/user"],
+                      ["Settings",    "/settings"],
+                    ].map(([label, path]) => (
+                      <div
+                        key={path}
+                        onClick={() => { navigate(path); setProfileOpen(false); }}
+                        style={{ padding:"9px 16px", cursor:"pointer", fontFamily:"'Archivo',sans-serif", fontSize:13, color:t.textMuted, transition:"all 0.15s" }}
+                        onMouseEnter={e => { e.currentTarget.style.background = t.blueBg; e.currentTarget.style.color = t.blue; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = t.textMuted; }}
+                      >{label}</div>
+                    ))}
+
+                    <div style={{ borderTop:`1px solid ${t.border}`, marginTop:4, paddingTop:4 }}>
+                      <div
+                        onClick={handleLogout}
+                        style={{ padding:"9px 16px", cursor:"pointer", fontFamily:"'Archivo',sans-serif", fontSize:13, color:"#ef4444", transition:"background 0.15s" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "rgba(239,68,68,0.08)"}
+                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                      >Logout</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* MOBILE HAMBURGER */}
             <button
-              onClick={() => { handleLogout(); setMenuOpen(false); }}
-              className="w-full py-2.5 rounded-xl text-sm bg-red-500/20 text-red-400"
+              onClick={() => setMenuOpen(!menuOpen)}
+              style={{
+                display:    "none", // shown via media query below
+                background: "none",
+                border:     `1px solid ${t.border}`,
+                borderRadius: 8,
+                padding:    "7px 10px",
+                cursor:     "pointer",
+                color:      t.textMuted,
+                fontSize:   18,
+                transition: "all 0.2s",
+              }}
+              className="mc-hamburger"
             >
-              Logout
+              {menuOpen ? "✕" : "☰"}
             </button>
-          )}
+          </div>
         </div>
-      )}
-    </nav>
+
+        {/* ── MOBILE MENU ── */}
+        {menuOpen && (
+          <div style={{
+            background:   t.bgCard,
+            borderTop:    `1px solid ${t.border}`,
+            padding:      "20px 6vw 24px",
+            animation:    "mc-slide-down 0.2s ease",
+          }}>
+            <ul style={{ listStyle:"none", padding:0, margin:"0 0 20px", display:"flex", flexDirection:"column", gap:0 }}>
+              {activeLinks.map(([label, path]) => (
+                <li key={path}>
+                  <span
+                    className="mc-mobile-link"
+                    onClick={() => { navigate(path); setMenuOpen(false); }}
+                    style={{
+                      display:    "block",
+                      padding:    "12px 0",
+                      borderBottom: `1px solid ${t.border}`,
+                      fontFamily: "'Archivo',sans-serif",
+                      fontSize:   14,
+                      fontWeight: isActive(path) ? 700 : 400,
+                      color:      isActive(path) ? t.blue : t.textMuted,
+                      cursor:     "pointer",
+                      transition: "color 0.15s",
+                    }}
+                  >{label}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div style={{ display:"flex", gap:10, alignItems:"center" }}>
+              {/* Mobile toggle */}
+              <button
+                onClick={toggle}
+                style={{
+                  flex:1,
+                  padding:    "11px 0",
+                  borderRadius: 10,
+                  background: t.bgAlt || t.bgCard,
+                  border:     `1px solid ${t.border}`,
+                  fontFamily: "'Archivo',sans-serif",
+                  fontSize:   13, fontWeight:600,
+                  color:      t.textMuted,
+                  cursor:     "pointer",
+                  display:    "flex", alignItems:"center", justifyContent:"center", gap:7,
+                }}
+              >
+                <span>{dark ? "☀️" : "🌙"}</span>
+                {dark ? "Light mode" : "Dark mode"}
+              </button>
+
+              {!user ? (
+                <button
+                  onClick={() => { navigate("/login"); setMenuOpen(false); }}
+                  style={{
+                    flex:1, padding:"11px 0", borderRadius:10,
+                    background:t.blue, color:"#fff",
+                    fontFamily:"'Archivo',sans-serif", fontWeight:700,
+                    fontSize:13, border:"none", cursor:"pointer",
+                  }}
+                >Login →</button>
+              ) : (
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    flex:1, padding:"11px 0", borderRadius:10,
+                    background:"rgba(239,68,68,0.1)", color:"#ef4444",
+                    fontFamily:"'Archivo',sans-serif", fontWeight:600,
+                    fontSize:13, border:"1px solid rgba(239,68,68,0.2)", cursor:"pointer",
+                  }}
+                >Logout</button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Click-outside to close profile dropdown */}
+        {profileOpen && (
+          <div
+            style={{ position:"fixed", inset:0, zIndex:150 }}
+            onClick={() => setProfileOpen(false)}
+          />
+        )}
+      </nav>
+
+      {/* Responsive hamburger visibility */}
+      <style>{`
+        @media (max-width: 768px) {
+          .mc-hamburger { display: flex !important; }
+          nav ul { display: none !important; }
+        }
+      `}</style>
+    </>
   );
 };
 
