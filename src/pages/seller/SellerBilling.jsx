@@ -1,95 +1,76 @@
 // src/pages/seller/SellerBilling.jsx
-// Complete billing: search medicine, add to cart, generate bill, print receipt
+// ─────────────────────────────────────────────────────────────────────────────
+// Reads theme from ThemeContext. No Tailwind. Full dark/light support.
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { useEffect, useState, useRef } from "react";
-import { useSelector } from "react-redux";
-import { FiSearch, FiTrash2, FiPrinter, FiCheckCircle, FiPlus, FiMinus } from "react-icons/fi";
+import { FiSearch, FiTrash2, FiPrinter, FiCheckCircle, FiPlus, FiMinus, FiShoppingCart } from "react-icons/fi";
 import { MdReceiptLong } from "react-icons/md";
 import mediGet1 from "../../assets/mediget1.jpg";
+import { useTheme } from "../../components/ThemeContext";
 
 const BASE = "http://localhost:8080/api";
 
 const SellerBilling = () => {
-  const [shopId, setShopId] = useState(null);
-  const [shopName, setShopName] = useState("");
-  const [allMedicines, setAllMedicines] = useState([]);
-  const [searchResult, setSearchResult] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [cart, setCart] = useState([]);
-  const [bill, setBill] = useState(null);
-  const [generating, setGenerating] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const { t, dark } = useTheme();
+
+  const [shopId,      setShopId]      = useState(null);
+  const [shopName,    setShopName]    = useState("");
+  const [allMedicines,setAllMedicines]= useState([]);
+  const [searchResult,setSearchResult]= useState([]);
+  const [searchTerm,  setSearchTerm]  = useState("");
+  const [cart,        setCart]        = useState([]);
+  const [bill,        setBill]        = useState(null);
+  const [generating,  setGenerating]  = useState(false);
+  const [loading,     setLoading]     = useState(true);
   const billRef = useRef(null);
+
+  // ─── Accent colours from context ──────────────────────────────────────────
+  const GREEN = t.accent  || "#10b981";
+  const BLUE  = t.blue    || "#2563eb";
+  const RED   = "#ef4444";
 
   useEffect(() => {
     const init = async () => {
       try {
-        const r = await fetch(`${BASE}/seller/shop`, { credentials: "include" });
+        const r = await fetch(`${BASE}/seller/shop`, { credentials:"include" });
         if (r.ok) {
           const s = await r.json();
           setShopId(s.shopId);
           setShopName(s.shopName);
-          // Load all medicines for this shop (unpaginated for billing)
-          const mr = await fetch(
-            `${BASE}/seller/shop/${s.shopId}/medicines?pageSize=100`,
-            { credentials: "include" }
-          );
-          if (mr.ok) {
-            const md = await mr.json();
-            setAllMedicines(md.content || []);
-          }
+          const mr = await fetch(`${BASE}/seller/shop/${s.shopId}/medicines?pageSize=100`, { credentials:"include" });
+          if (mr.ok) { const md = await mr.json(); setAllMedicines(md.content || []); }
         }
-      } catch { }
+      } catch {}
       finally { setLoading(false); }
     };
     init();
   }, []);
 
-  // Live search
   useEffect(() => {
     if (!searchTerm.trim()) { setSearchResult([]); return; }
     const q = searchTerm.toLowerCase();
-    setSearchResult(
-      allMedicines.filter(m =>
-        m.medicineName.toLowerCase().includes(q) && m.quantity > 0
-      ).slice(0, 6)
-    );
+    setSearchResult(allMedicines.filter(m => m.medicineName.toLowerCase().includes(q) && m.quantity > 0).slice(0, 6));
   }, [searchTerm, allMedicines]);
 
   const addToCart = (med) => {
     setCart(prev => {
       const existing = prev.find(c => c.medicineId === med.medicineId);
       if (existing) {
-        if (existing.quantity >= med.quantity) return prev; // max stock
-        return prev.map(c =>
-          c.medicineId === med.medicineId
-            ? { ...c, quantity: c.quantity + 1 }
-            : c
-        );
+        if (existing.quantity >= med.quantity) return prev;
+        return prev.map(c => c.medicineId === med.medicineId ? { ...c, quantity: c.quantity + 1 } : c);
       }
-      return [...prev, {
-        medicineId: med.medicineId,
-        medicineName: med.medicineName,
-        price: med.specialPrice,
-        maxStock: med.quantity,
-        quantity: 1,
-      }];
+      return [...prev, { medicineId:med.medicineId, medicineName:med.medicineName, price:med.specialPrice, maxStock:med.quantity, quantity:1 }];
     });
     setSearchTerm("");
     setSearchResult([]);
   };
 
   const updateQty = (medicineId, delta) => {
-    setCart(prev => prev
-      .map(c => c.medicineId === medicineId
-        ? { ...c, quantity: Math.max(1, Math.min(c.maxStock, c.quantity + delta)) }
-        : c
-      )
-    );
+    setCart(prev => prev.map(c => c.medicineId === medicineId ? { ...c, quantity:Math.max(1,Math.min(c.maxStock,c.quantity+delta)) } : c));
   };
 
-  const removeFromCart = (medicineId) => {
-    setCart(prev => prev.filter(c => c.medicineId !== medicineId));
-  };
+  const removeFromCart = (medicineId) => setCart(prev => prev.filter(c => c.medicineId !== medicineId));
 
   const cartTotal = cart.reduce((sum, c) => sum + c.price * c.quantity, 0);
 
@@ -97,29 +78,18 @@ const SellerBilling = () => {
     if (!cart.length) return;
     setGenerating(true);
     try {
-      const payload = cart.map(c => ({
-        medicineId: c.medicineId,
-        quantity: c.quantity,
-      }));
       const res = await fetch(`${BASE}/seller/shop/${shopId}/bill`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        credentials:"include",
+        body:JSON.stringify(cart.map(c => ({ medicineId:c.medicineId, quantity:c.quantity }))),
       });
       if (res.ok) {
         const data = await res.json();
         setBill(data);
         setCart([]);
-        // Refresh medicines for updated stock
-        const mr = await fetch(
-          `${BASE}/seller/shop/${shopId}/medicines?pageSize=100`,
-          { credentials: "include" }
-        );
-        if (mr.ok) {
-          const md = await mr.json();
-          setAllMedicines(md.content || []);
-        }
+        const mr = await fetch(`${BASE}/seller/shop/${shopId}/medicines?pageSize=100`, { credentials:"include" });
+        if (mr.ok) { const md = await mr.json(); setAllMedicines(md.content || []); }
       } else {
         const d = await res.json();
         alert(d.message || "Billing failed");
@@ -131,137 +101,192 @@ const SellerBilling = () => {
   const printBill = () => {
     const content = billRef.current.innerHTML;
     const win = window.open("", "_blank");
-    win.document.write(`
-      <html><head><title>Bill - ${bill.billId}</title>
-      <style>
-        body { font-family: monospace; padding: 20px; max-width: 400px; margin: 0 auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 6px; border-bottom: 1px solid #ccc; text-align: left; }
-        .total { font-size: 1.2em; font-weight: bold; }
-      </style>
-      </head><body>${content}</body></html>
-    `);
+    win.document.write(`<html><head><title>Bill - ${bill.billId}</title>
+      <style>body{font-family:monospace;padding:20px;max-width:400px;margin:0 auto;}table{width:100%;border-collapse:collapse;}th,td{padding:6px;border-bottom:1px solid #ccc;text-align:left;}.total{font-size:1.2em;font-weight:bold;}</style>
+      </head><body>${content}</body></html>`);
     win.document.close();
     win.print();
   };
 
+  // ── Shared input style ─────────────────────────────────────────────────────
+  const inputStyle = {
+    width:"100%", padding:"11px 14px 11px 40px",
+    borderRadius:11, background:t.bgAlt,
+    border:`1px solid ${t.border}`,
+    color:t.text, fontSize:14,
+    outline:"none", fontFamily:"'DM Sans',sans-serif",
+    transition:"border-color 0.2s",
+    boxSizing:"border-box",
+  };
+
+  const btnPrimary = (disabled = false) => ({
+    padding:"12px 0", width:"100%", borderRadius:11,
+    background: disabled ? t.bgAlt : GREEN,
+    color:      disabled ? t.textMuted : "#fff",
+    fontFamily: "'DM Sans',sans-serif",
+    fontWeight: 700, fontSize:14,
+    border:     "none", cursor: disabled ? "not-allowed" : "pointer",
+    opacity:    disabled ? 0.5 : 1,
+    transition: "opacity 0.2s",
+  });
+
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="w-10 h-10 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+    <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", background:t.bg }}>
+      <div style={{ width:44, height:44, borderRadius:"50%", border:`4px solid ${GREEN}`, borderTopColor:"transparent", animation:"sb-spin 0.8s linear infinite" }} />
+      <style>{`@keyframes sb-spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 
   return (
-    <div className="min-h-screen px-[8vw] pt-28 pb-20 text-white">
+    <div style={{
+      minHeight:  "100vh",
+      padding:    "112px 8vw 80px",
+      background: t.bg,
+      color:      t.text,
+      fontFamily: "'DM Sans', sans-serif",
+      transition: "background 0.3s, color 0.3s",
+    }}>
 
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold flex items-center gap-3">
-          <MdReceiptLong className="text-emerald-400" /> Billing Counter
-        </h1>
-        <p className="text-gray-400 text-sm mt-1">Search medicines, add to cart, generate bill</p>
+      {/* ── HEADER ── */}
+      <div style={{ marginBottom:32 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+          <div style={{ width:44, height:44, borderRadius:12, background:`${GREEN}18`, border:`1px solid ${GREEN}30`, display:"flex", alignItems:"center", justifyContent:"center" }}>
+            <MdReceiptLong style={{ color:GREEN, fontSize:22 }} />
+          </div>
+          <div>
+            <h1 style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:800, fontSize:"clamp(1.6rem,3.5vw,2.2rem)", margin:0, letterSpacing:"-0.03em" }}>
+              Billing Counter
+            </h1>
+            <p style={{ color:t.textMuted, fontSize:13, margin:0 }}>Search medicines, add to cart, generate bill</p>
+          </div>
+        </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 340px", gap:24, alignItems:"start" }}>
 
-        {/* LEFT — SEARCH + CART */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* ── LEFT: SEARCH + CART ── */}
+        <div style={{ display:"flex", flexDirection:"column", gap:18 }}>
 
-          {/* SEARCH */}
-          <div className="bg-[#0f172a] border border-white/10 rounded-2xl p-5">
-            <h2 className="font-semibold text-gray-300 mb-3">Add Medicine to Cart</h2>
-            <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          {/* SEARCH PANEL */}
+          <div style={{ background:t.bgCard, border:`1px solid ${t.border}`, borderRadius:18, padding:"22px 20px" }}>
+            <p style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:700, fontSize:14, color:t.text, marginBottom:14 }}>
+              Add Medicine to Cart
+            </p>
+
+            {/* Search input */}
+            <div style={{ position:"relative" }}>
+              <FiSearch style={{ position:"absolute", left:13, top:"50%", transform:"translateY(-50%)", color:t.textMuted, fontSize:15, pointerEvents:"none" }} />
               <input
                 type="text"
                 placeholder="Search by medicine name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#1e293b] text-white
-                           border border-white/10 focus:outline-none focus:border-emerald-400 transition"
+                style={inputStyle}
+                onFocus={e => e.target.style.borderColor = GREEN}
+                onBlur={e  => e.target.style.borderColor = t.border}
               />
             </div>
 
-            {/* SEARCH RESULTS */}
+            {/* Search results */}
             {searchResult.length > 0 && (
-              <div className="mt-3 space-y-2">
-                {searchResult.map(med => (
-                  <div
-                    key={med.medicineId}
-                    onClick={() => addToCart(med)}
-                    className="flex items-center gap-4 bg-[#1e293b] rounded-xl p-3
-                               border border-white/10 hover:border-emerald-400/40
-                               hover:bg-emerald-400/5 cursor-pointer transition"
-                  >
-                    <img
-                      src={med.image ? `http://localhost:8080/images/${med.image}` : mediGet1}
-                      alt={med.medicineName}
-                      className="w-12 h-12 rounded-lg object-cover"
-                      onError={(e) => { e.target.src = mediGet1; }}
-                    />
-                    <div className="flex-1">
-                      <p className="text-white font-medium text-sm">{med.medicineName}</p>
-                      <p className="text-gray-500 text-xs">{med.description?.slice(0, 40)}...</p>
+              <div style={{ marginTop:12, display:"flex", flexDirection:"column", gap:8 }}>
+                {searchResult.map(med => {
+                  const [hov, setHov] = useState(false);
+                  return (
+                    <div key={med.medicineId}
+                      onClick={() => addToCart(med)}
+                      onMouseEnter={() => setHov(true)}
+                      onMouseLeave={() => setHov(false)}
+                      style={{
+                        display:"flex", alignItems:"center", gap:14,
+                        padding:"10px 14px", borderRadius:12,
+                        background: hov ? t.bgCardHov : t.bgAlt,
+                        border:`1px solid ${hov ? GREEN + "50" : t.border}`,
+                        cursor:"pointer", transition:"all 0.18s",
+                      }}>
+                      <img
+                        src={med.image ? `http://localhost:8080/images/${med.image}` : mediGet1}
+                        alt={med.medicineName}
+                        onError={(e) => { e.target.src = mediGet1; }}
+                        style={{ width:44, height:44, borderRadius:10, objectFit:"cover", flexShrink:0 }}
+                      />
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <p style={{ color:t.text, fontWeight:600, fontSize:13, margin:"0 0 3px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{med.medicineName}</p>
+                        <p style={{ color:t.textMuted, fontSize:11, margin:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{med.description?.slice(0,40)}...</p>
+                      </div>
+                      <div style={{ textAlign:"right", flexShrink:0 }}>
+                        <p style={{ color:GREEN, fontWeight:700, fontSize:14, margin:"0 0 2px" }}>₹{med.specialPrice?.toFixed(2)}</p>
+                        <p style={{ color:t.textMuted, fontSize:11, margin:0 }}>Stock: {med.quantity}</p>
+                      </div>
+                      <div style={{ width:26, height:26, borderRadius:7, background:`${GREEN}20`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                        <FiPlus style={{ color:GREEN, fontSize:14 }} />
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-emerald-400 font-bold">₹{med.specialPrice?.toFixed(2)}</p>
-                      <p className="text-xs text-gray-500">Stock: {med.quantity}</p>
-                    </div>
-                    <FiPlus className="text-emerald-400 text-lg flex-shrink-0" />
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
             {searchTerm && searchResult.length === 0 && (
-              <p className="text-gray-600 text-sm mt-3 text-center">No available medicines found.</p>
+              <p style={{ color:t.textMuted, fontSize:13, textAlign:"center", marginTop:16, padding:"12px 0" }}>
+                No available medicines found for "{searchTerm}"
+              </p>
             )}
           </div>
 
-          {/* CART */}
-          <div className="bg-[#0f172a] border border-white/10 rounded-2xl p-5">
-            <h2 className="font-semibold text-gray-300 mb-4">
-              Cart
-              <span className="ml-2 text-xs bg-emerald-400/10 text-emerald-400 px-2 py-0.5 rounded-full">
-                {cart.length} items
-              </span>
-            </h2>
+          {/* CART PANEL */}
+          <div style={{ background:t.bgCard, border:`1px solid ${t.border}`, borderRadius:18, padding:"22px 20px" }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
+              <p style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:700, fontSize:14, color:t.text, margin:0 }}>
+                Cart
+              </p>
+              {cart.length > 0 && (
+                <span style={{ fontSize:11, fontWeight:700, color:GREEN, background:`${GREEN}18`, padding:"3px 10px", borderRadius:20 }}>
+                  {cart.length} item{cart.length > 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
 
             {cart.length === 0 ? (
-              <div className="text-center py-12 text-gray-600">
-                <FiSearch className="mx-auto text-4xl mb-2" />
-                <p>Cart is empty. Search and add medicines above.</p>
+              <div style={{ textAlign:"center", padding:"40px 0", color:t.textMuted }}>
+                <FiShoppingCart style={{ fontSize:36, marginBottom:10, opacity:0.3 }} />
+                <p style={{ fontSize:14, fontWeight:600, marginBottom:4 }}>Cart is empty</p>
+                <p style={{ fontSize:12 }}>Search and add medicines above</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
                 {cart.map(item => (
-                  <div key={item.medicineId}
-                    className="flex items-center gap-4 bg-[#1e293b] rounded-xl p-3 border border-white/5">
-                    <div className="flex-1">
-                      <p className="text-white text-sm font-medium">{item.medicineName}</p>
-                      <p className="text-emerald-400 text-xs">₹{item.price?.toFixed(2)} each</p>
+                  <div key={item.medicineId} style={{
+                    display:"flex", alignItems:"center", gap:12,
+                    padding:"11px 14px", borderRadius:12,
+                    background:t.bgAlt, border:`1px solid ${t.border}`,
+                  }}>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <p style={{ color:t.text, fontSize:13, fontWeight:600, margin:"0 0 2px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{item.medicineName}</p>
+                      <p style={{ color:GREEN, fontSize:12, margin:0, fontWeight:500 }}>₹{item.price?.toFixed(2)} each</p>
                     </div>
 
-                    {/* QTY CONTROL */}
-                    <div className="flex items-center gap-2 bg-[#0f172a] rounded-lg px-3 py-1.5">
+                    {/* Qty control */}
+                    <div style={{ display:"flex", alignItems:"center", gap:8, background:t.bgCard, borderRadius:9, padding:"5px 10px", border:`1px solid ${t.border}` }}>
                       <button onClick={() => updateQty(item.medicineId, -1)}
-                        className="text-gray-400 hover:text-white transition">
-                        <FiMinus size={12} />
+                        style={{ background:"none", border:"none", cursor:"pointer", color:t.textMuted, display:"flex", alignItems:"center", padding:2 }}>
+                        <FiMinus size={11} />
                       </button>
-                      <span className="text-white text-sm font-bold w-6 text-center">
-                        {item.quantity}
-                      </span>
+                      <span style={{ color:t.text, fontWeight:700, fontSize:13, minWidth:18, textAlign:"center" }}>{item.quantity}</span>
                       <button onClick={() => updateQty(item.medicineId, 1)}
-                        className="text-gray-400 hover:text-white transition">
-                        <FiPlus size={12} />
+                        style={{ background:"none", border:"none", cursor:"pointer", color:t.textMuted, display:"flex", alignItems:"center", padding:2 }}>
+                        <FiPlus size={11} />
                       </button>
                     </div>
 
-                    <span className="text-white font-bold text-sm w-20 text-right">
+                    <span style={{ fontWeight:700, fontSize:13, color:t.text, minWidth:70, textAlign:"right" }}>
                       ₹{(item.price * item.quantity).toFixed(2)}
                     </span>
 
                     <button onClick={() => removeFromCart(item.medicineId)}
-                      className="text-gray-600 hover:text-red-400 transition">
+                      style={{ background:"none", border:"none", cursor:"pointer", color:t.textMuted, padding:4, display:"flex", alignItems:"center", transition:"color 0.15s" }}
+                      onMouseEnter={e => e.currentTarget.style.color = RED}
+                      onMouseLeave={e => e.currentTarget.style.color = t.textMuted}>
                       <FiTrash2 size={14} />
                     </button>
                   </div>
@@ -271,101 +296,136 @@ const SellerBilling = () => {
           </div>
         </div>
 
-        {/* RIGHT — SUMMARY */}
-        <div className="space-y-5">
-          <div className="bg-[#0f172a] border border-white/10 rounded-2xl p-5 sticky top-28">
-            <h2 className="font-semibold text-gray-300 mb-5">Order Summary</h2>
+        {/* ── RIGHT: ORDER SUMMARY ── */}
+        <div style={{ position:"sticky", top:84 }}>
+          <div style={{ background:t.bgCard, border:`1px solid ${t.border}`, borderRadius:18, padding:"22px 20px" }}>
+            <p style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:700, fontSize:14, color:t.text, marginBottom:18 }}>
+              Order Summary
+            </p>
 
-            <div className="space-y-3 mb-5">
-              {cart.map(item => (
-                <div key={item.medicineId} className="flex justify-between text-sm">
-                  <span className="text-gray-400">{item.medicineName} × {item.quantity}</span>
-                  <span className="text-white">₹{(item.price * item.quantity).toFixed(2)}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="border-t border-white/10 pt-4 mb-5">
-              <div className="flex justify-between font-bold text-lg">
-                <span>Total</span>
-                <span className="text-emerald-400">₹{cartTotal.toFixed(2)}</span>
+            {cart.length === 0 ? (
+              <p style={{ color:t.textMuted, fontSize:13, textAlign:"center", padding:"16px 0 20px" }}>No items added yet.</p>
+            ) : (
+              <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:18 }}>
+                {cart.map(item => (
+                  <div key={item.medicineId} style={{ display:"flex", justifyContent:"space-between", fontSize:13 }}>
+                    <span style={{ color:t.textMuted }}>
+                      {item.medicineName} <span style={{ fontSize:11 }}>×{item.quantity}</span>
+                    </span>
+                    <span style={{ color:t.text, fontWeight:600 }}>₹{(item.price * item.quantity).toFixed(2)}</span>
+                  </div>
+                ))}
               </div>
+            )}
+
+            <div style={{ borderTop:`1px solid ${t.border}`, paddingTop:14, marginBottom:18 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <span style={{ fontWeight:700, fontSize:15, color:t.text }}>Total</span>
+                <span style={{ fontWeight:800, fontSize:20, color:GREEN }}>₹{cartTotal.toFixed(2)}</span>
+              </div>
+              {cart.length > 0 && (
+                <p style={{ fontSize:11, color:t.textMuted, marginTop:6, marginBottom:0 }}>
+                  {cart.length} item{cart.length > 1 ? "s" : ""} · Stock will be deducted on generation
+                </p>
+              )}
             </div>
 
             <button
               onClick={generateBill}
               disabled={!cart.length || generating}
-              className="w-full py-3 rounded-xl font-bold text-black
-                         bg-gradient-to-r from-emerald-400 to-cyan-400
-                         hover:shadow-[0_0_25px_rgba(16,185,129,0.5)]
-                         disabled:opacity-40 disabled:cursor-not-allowed transition"
+              style={btnPrimary(!cart.length || generating)}
+              onMouseEnter={e => { if (cart.length && !generating) e.currentTarget.style.opacity = "0.88"; }}
+              onMouseLeave={e => e.currentTarget.style.opacity = "1"}
             >
-              {generating ? "Generating..." : "Generate Bill"}
+              {generating ? "Generating..." : "Generate Bill →"}
             </button>
+
+            {/* Quick note */}
+            <p style={{ fontSize:11, color:t.textMuted, textAlign:"center", marginTop:12, marginBottom:0 }}>
+              Inventory updates automatically after bill generation
+            </p>
           </div>
         </div>
       </div>
 
       {/* ── BILL MODAL ── */}
       {bill && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-[#0f172a] border border-emerald-500/30 rounded-2xl p-7 w-full max-w-md
-                          shadow-[0_0_50px_rgba(16,185,129,0.3)]">
-
-            <div className="flex items-center gap-2 mb-5">
-              <FiCheckCircle className="text-emerald-400 text-2xl" />
-              <h2 className="text-xl font-bold text-emerald-400">Bill Generated!</h2>
+        <div style={{ position:"fixed", inset:0, zIndex:200, display:"flex", alignItems:"center", justifyContent:"center", padding:16, background:"rgba(0,0,0,0.6)", backdropFilter:"blur(6px)" }}>
+          <div style={{
+            background:   t.bgCard,
+            border:       `1px solid ${GREEN}40`,
+            borderRadius: 20,
+            padding:      "28px 26px",
+            width:"100%", maxWidth:440,
+            boxShadow:    `0 0 60px ${GREEN}20`,
+          }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20 }}>
+              <FiCheckCircle style={{ color:GREEN, fontSize:24 }} />
+              <div>
+                <h2 style={{ fontWeight:800, fontSize:18, color:GREEN, margin:0 }}>Bill Generated!</h2>
+                <p style={{ color:t.textMuted, fontSize:12, margin:0 }}>Bill #{bill.billId} · {new Date(bill.billDate).toLocaleDateString("en-IN")}</p>
+              </div>
             </div>
 
-            {/* PRINTABLE SECTION */}
-            <div ref={billRef} className="bg-[#1e293b] rounded-xl p-5 mb-5 font-mono">
-              <div className="text-center mb-4">
-                <p className="text-white font-bold text-lg">{shopName || "Medical Store"}</p>
-                <p className="text-gray-400 text-xs">Bill #{bill.billId}</p>
-                <p className="text-gray-500 text-xs">
-                  {new Date(bill.billDate).toLocaleDateString("en-IN")}
-                </p>
+            {/* Printable section */}
+            <div ref={billRef} style={{
+              background:   t.bgAlt,
+              border:       `1px solid ${t.border}`,
+              borderRadius: 14,
+              padding:      "18px 16px",
+              marginBottom: 18,
+              fontFamily:   "monospace",
+            }}>
+              <div style={{ textAlign:"center", marginBottom:14, paddingBottom:14, borderBottom:`1px dashed ${t.border}` }}>
+                <p style={{ fontWeight:700, fontSize:16, color:t.text, margin:"0 0 4px" }}>{shopName || "Medical Store"}</p>
+                <p style={{ color:t.textMuted, fontSize:11, margin:0 }}>Tax Invoice · Bill #{bill.billId}</p>
               </div>
 
-              <table className="w-full text-xs mb-4">
+              <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}>
                 <thead>
-                  <tr className="text-gray-400 border-b border-white/10">
-                    <th className="py-1 text-left">Medicine</th>
-                    <th className="py-1 text-right">Qty</th>
-                    <th className="py-1 text-right">Price</th>
-                    <th className="py-1 text-right">Total</th>
+                  <tr style={{ borderBottom:`1px solid ${t.border}` }}>
+                    {["Medicine","Qty","Price","Total"].map(h=>(
+                      <th key={h} style={{ padding:"6px 4px", textAlign:h==="Medicine"?"left":"right", color:t.textMuted, fontWeight:600, fontSize:10, textTransform:"uppercase" }}>{h}</th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {bill.items?.map((item, i) => (
-                    <tr key={i} className="text-gray-300 border-b border-white/5">
-                      <td className="py-1.5">{item.medicineName}</td>
-                      <td className="py-1.5 text-right">{item.quantity}</td>
-                      <td className="py-1.5 text-right">₹{item.price?.toFixed(2)}</td>
-                      <td className="py-1.5 text-right text-emerald-400">₹{item.totalPrice?.toFixed(2)}</td>
+                    <tr key={i} style={{ borderBottom:`1px solid ${t.border}` }}>
+                      <td style={{ padding:"7px 4px", color:t.text }}>{item.medicineName}</td>
+                      <td style={{ padding:"7px 4px", textAlign:"right", color:t.textMuted }}>{item.quantity}</td>
+                      <td style={{ padding:"7px 4px", textAlign:"right", color:t.textMuted }}>₹{item.price?.toFixed(2)}</td>
+                      <td style={{ padding:"7px 4px", textAlign:"right", color:GREEN, fontWeight:700 }}>₹{item.totalPrice?.toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
 
-              <div className="border-t border-white/10 pt-3 flex justify-between font-bold text-white">
-                <span>TOTAL</span>
-                <span className="text-emerald-400">₹{bill.totalAmount?.toFixed(2)}</span>
+              <div style={{ borderTop:`2px solid ${t.border}`, marginTop:10, paddingTop:10, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <span style={{ fontWeight:700, fontSize:13, color:t.text }}>TOTAL</span>
+                <span style={{ fontWeight:800, fontSize:16, color:GREEN }}>₹{bill.totalAmount?.toFixed(2)}</span>
               </div>
 
-              <p className="text-center text-gray-600 text-xs mt-4">Thank you for your purchase!</p>
+              <p style={{ textAlign:"center", color:t.textMuted, fontSize:10, marginTop:14, marginBottom:0 }}>Thank you for your purchase!</p>
             </div>
 
-            <div className="flex gap-3">
-              <button onClick={printBill}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl
-                           bg-[#1e293b] border border-white/10 hover:bg-[#334155] transition">
-                <FiPrinter size={16} /> Print
+            <div style={{ display:"flex", gap:10 }}>
+              <button onClick={printBill} style={{
+                flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:8,
+                padding:"11px 0", borderRadius:11,
+                background:t.bgAlt, border:`1px solid ${t.border}`,
+                color:t.text, fontFamily:"'DM Sans',sans-serif", fontWeight:600, fontSize:13,
+                cursor:"pointer",
+              }}>
+                <FiPrinter size={15} /> Print Receipt
               </button>
-              <button onClick={() => setBill(null)}
-                className="flex-1 py-2.5 rounded-xl font-semibold text-black
-                           bg-gradient-to-r from-emerald-400 to-cyan-400 hover:scale-[1.01] transition">
-                Done
+              <button onClick={() => setBill(null)} style={{
+                flex:1, padding:"11px 0", borderRadius:11,
+                background:GREEN, color:"#fff",
+                fontFamily:"'DM Sans',sans-serif", fontWeight:700, fontSize:13,
+                border:"none", cursor:"pointer",
+              }}>
+                Done ✓
               </button>
             </div>
           </div>

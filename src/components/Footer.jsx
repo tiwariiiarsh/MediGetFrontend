@@ -7,35 +7,6 @@
 import { Link } from "react-router-dom";
 import { useTheme } from "../components/ThemeContext";
 
-// ─── FOOTER BRAND (big background text) ──────────────────────────────────────
-export const FooterBrand = () => {
-  const { t } = useTheme();
-  return (
-    <div style={{ position:"relative", width:"100%", overflow:"hidden", userSelect:"none" }}>
-      {/* Divider line */}
-      <div style={{ width:"100%", display:"flex", justifyContent:"center", marginBottom:40 }}>
-        <div style={{ height:1, width:"85%", background:`linear-gradient(90deg, transparent, ${t.border === "rgba(255,255,255,0.08)" ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.18)"}, transparent)` }} />
-      </div>
-
-      {/* Big BG text */}
-      <h1 style={{
-        textAlign:      "center",
-        fontFamily:     "'Archivo',sans-serif",
-        fontWeight:     900,
-        letterSpacing:  "0.18em",
-        fontSize:       "14vw",
-        lineHeight:     1,
-        color:          t.text,
-        opacity:        0.04,
-        filter:         "blur(1px)",
-        pointerEvents:  "none",
-        margin:         0,
-      }}>
-        MEDICARE
-      </h1>
-    </div>
-  );
-};
 
 // ─── MAIN FOOTER ──────────────────────────────────────────────────────────────
 const Footer = () => {
@@ -62,7 +33,6 @@ const Footer = () => {
     <footer style={{ background:t.footerBg, borderTop:`1px solid ${t.border}`, marginTop:0 }}>
 
       {/* BIG BG BRAND TEXT */}
-      <FooterBrand />
 
       {/* TOP DIVIDER */}
       <div style={{ height:1, background:t.border, marginBottom:0 }} />

@@ -1,8 +1,8 @@
 // src/components/Navbar.jsx
 // ─────────────────────────────────────────────────────────────────────────────
-// Theme-aware Navbar — dark/light toggle built in.
-// Reads theme from ThemeContext. Blue + black + white only — no gradients.
-// Fonts: Archivo (same as Home.jsx)
+// Theme-aware Navbar.
+// Reads dark/toggle/t from ThemeContext — one toggle updates the entire app.
+// No props needed. Fonts: Archivo.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from "react";
@@ -12,17 +12,20 @@ import { logOutUser } from "../store/actions";
 import { useTheme } from "../components/ThemeContext";
 
 const Navbar = () => {
-  const user      = useSelector((s) => s.auth.user);
-  const dispatch  = useDispatch();
-  const navigate  = useNavigate();
-  const location  = useLocation();
+  const user     = useSelector((s) => s.auth.user);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // ── useTheme() gives dark state + toggle + token object ──────────────────
+  // Calling toggle() here will re-render EVERY component that calls useTheme()
   const { dark, toggle, t } = useTheme();
 
-  const [scrolled,  setScrolled]  = useState(false);
-  const [menuOpen,  setMenuOpen]  = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [scrolled,     setScrolled]     = useState(false);
+  const [menuOpen,     setMenuOpen]     = useState(false);
+  const [profileOpen,  setProfileOpen]  = useState(false);
 
-  // Hide on login / signup pages
+  // Hide on auth pages
   if (location.pathname === "/login" || location.pathname === "/signup") return null;
 
   // Scroll detection
@@ -40,42 +43,80 @@ const Navbar = () => {
 
   const role = user?.roles?.[0] || user?.role?.[0] || null;
 
-  // ─── NAV LINKS PER ROLE ────────────────────────────────────────────────────
-  const publicLinks  = [["Home","/"],["Medicines","/medicines"],["About","/about"],["Contact","/contact"]];
-  const sellerLinks  = [["Dashboard","/seller"],["Inventory","/seller/medicines"],["Billing","/seller/billing"],["Analytics","/seller/analytics"]];
-  const userLinks    = [["Home","/"],["Medicines","/medicines"],["About","/about"],["Contact","/contact"]];
-  const activeLinks  = !user ? publicLinks : role === "ROLE_SELLER" ? sellerLinks : userLinks;
+  // ─── NAV LINKS PER ROLE ───────────────────────────────────────────────────
+  const publicLinks = [["Home","/"],["Medicines","/medicines"],["About","/about"],["Contact","/contact"]];
+  const sellerLinks = [["Dashboard","/seller"],["Inventory","/seller/medicines"],["Billing","/seller/billing"],["Analytics","/seller/analytics"]];
+  const userLinks   = [["Home","/"],["Medicines","/medicines"],["About","/about"],["Contact","/contact"]];
+  const activeLinks = !user ? publicLinks : role === "ROLE_SELLER" ? sellerLinks : userLinks;
 
   const isActive = (path) => location.pathname === path;
 
-  // ─── STYLE HELPERS ────────────────────────────────────────────────────────
+  // ─── STYLES ───────────────────────────────────────────────────────────────
   const linkStyle = (path) => ({
-    fontFamily:  "'Archivo',sans-serif",
-    fontSize:    13,
-    fontWeight:  isActive(path) ? 700 : 400,
-    color:       isActive(path) ? t.blue : t.textMuted,
+    fontFamily:     "'Archivo', sans-serif",
+    fontSize:       13,
+    fontWeight:     isActive(path) ? 700 : 400,
+    color:          isActive(path) ? t.blue : t.textMuted,
     textDecoration: "none",
-    borderBottom: isActive(path) ? `2px solid ${t.blue}` : "none",
-    paddingBottom: isActive(path) ? 2 : 0,
-    cursor:      "pointer",
-    transition:  "color 0.18s",
-    background:  "none",
-    border:      isActive(path) ? `0 0 0 0` : "none",
-    padding:     "0",
+    borderBottom:   isActive(path) ? `2px solid ${t.blue}` : "2px solid transparent",
+    paddingBottom:  2,
+    cursor:         "pointer",
+    transition:     "color 0.18s",
+    background:     "none",
+    border:         "none",
+    padding:        "2px 0",
+    borderBottom:   isActive(path) ? `2px solid ${t.blue}` : "2px solid transparent",
   });
 
   const navBg = scrolled
-    ? `${t.navBg}`
+    ? t.navBg
     : dark ? "rgba(0,0,0,0)" : "rgba(245,242,235,0)";
 
   const navBorder = scrolled ? `1px solid ${t.border}` : "1px solid transparent";
 
+  // ─── TOGGLE BUTTON ────────────────────────────────────────────────────────
+  // This single button controls the theme for the ENTIRE application
+  const ThemeToggleBtn = ({ mobile = false }) => (
+    <button
+      onClick={toggle}              // ← calls ThemeContext toggle → re-renders all
+      style={{
+        display:      "flex",
+        alignItems:   "center",
+        gap:          7,
+        background:   t.bgCard,
+        border:       `1px solid ${t.border}`,
+        borderRadius: 100,
+        padding:      mobile ? "11px 0" : "7px 15px",
+        width:        mobile ? "100%" : "auto",
+        justifyContent: mobile ? "center" : "flex-start",
+        cursor:       "pointer",
+        fontFamily:   "'Archivo', sans-serif",
+        fontSize:     mobile ? 13 : 12,
+        fontWeight:   600,
+        color:        t.textMuted,
+        transition:   "all 0.2s",
+      }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = t.blue; e.currentTarget.style.color = t.blue; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.textMuted; }}
+    >
+      <span style={{ fontSize: 14 }}>{dark ? "☀️" : "🌙"}</span>
+      {dark ? (mobile ? "Light mode" : "Light") : (mobile ? "Dark mode" : "Dark")}
+    </button>
+  );
+
   return (
     <>
       <style>{`
-        @keyframes mc-slide-down { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
-        .mc-nav-link:hover { color: ${t.blue} !important; }
+        @keyframes mc-slide-down {
+          from { opacity:0; transform:translateY(-8px); }
+          to   { opacity:1; transform:translateY(0); }
+        }
+        .mc-nav-link:hover    { color: ${t.blue} !important; }
         .mc-mobile-link:hover { color: ${t.blue} !important; }
+        @media (max-width: 768px) {
+          .mc-hamburger { display: flex !important; }
+          .mc-desktop-links { display: none !important; }
+        }
       `}</style>
 
       <nav style={{
@@ -105,21 +146,25 @@ const Navbar = () => {
           >
             <div style={{
               width:36, height:36,
-              background: t.blue,
+              background:   t.blue,
               borderRadius: 9,
-              display:"flex", alignItems:"center", justifyContent:"center",
-              fontFamily:"'Archivo',sans-serif", fontWeight:900, fontSize:20, color:"#fff",
+              display:      "flex", alignItems:"center", justifyContent:"center",
+              fontFamily:   "'Archivo', sans-serif",
+              fontWeight:   900, fontSize:20, color:"#fff",
             }}>+</div>
             <span style={{
-              fontFamily: "'Archivo',sans-serif",
-              fontWeight: 800, fontSize: 16,
-              color: t.text,
+              fontFamily:    "'Archivo', sans-serif",
+              fontWeight:    800, fontSize:16,
+              color:         t.text,
               letterSpacing: "-0.025em",
             }}>MediCare</span>
           </div>
 
           {/* ── DESKTOP LINKS ── */}
-          <ul style={{ display:"flex", alignItems:"center", gap:28, listStyle:"none", padding:0, margin:0 }}>
+          <ul className="mc-desktop-links" style={{
+            display:    "flex", alignItems:"center", gap:28,
+            listStyle:  "none", padding:0, margin:0,
+          }}>
             {activeLinks.map(([label, path]) => (
               <li key={path}>
                 <span
@@ -134,30 +179,8 @@ const Navbar = () => {
           {/* ── RIGHT: TOGGLE + AUTH ── */}
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
 
-            {/* THEME TOGGLE */}
-            <button
-              onClick={toggle}
-              style={{
-                display:        "flex",
-                alignItems:     "center",
-                gap:            7,
-                background:     t.bgCard,
-                border:         `1px solid ${t.border}`,
-                borderRadius:   100,
-                padding:        "7px 15px",
-                cursor:         "pointer",
-                fontFamily:     "'Archivo',sans-serif",
-                fontSize:       12,
-                fontWeight:     600,
-                color:          t.textMuted,
-                transition:     "all 0.2s",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = t.blue; e.currentTarget.style.color = t.blue; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.textMuted; }}
-            >
-              <span style={{ fontSize:14 }}>{dark ? "☀️" : "🌙"}</span>
-              {dark ? "Light" : "Dark"}
-            </button>
+            {/* ── THEME TOGGLE — controls entire app ── */}
+            <ThemeToggleBtn />
 
             {/* NOT LOGGED IN */}
             {!user && (
@@ -168,9 +191,8 @@ const Navbar = () => {
                   borderRadius: 12,
                   background: t.blue,
                   color:      "#fff",
-                  fontFamily: "'Archivo',sans-serif",
-                  fontWeight: 700,
-                  fontSize:   13,
+                  fontFamily: "'Archivo', sans-serif",
+                  fontWeight: 700, fontSize:13,
                   border:     "none",
                   cursor:     "pointer",
                   transition: "opacity 0.2s",
@@ -180,22 +202,20 @@ const Navbar = () => {
               >Login →</button>
             )}
 
-            {/* LOGGED IN */}
+            {/* LOGGED IN — avatar + dropdown */}
             {user && (
               <div style={{ position:"relative" }}>
                 <div
                   onClick={() => setProfileOpen(!profileOpen)}
                   style={{
-                    width:        38, height:38,
-                    borderRadius: "50%",
-                    background:   t.blue,
-                    display:      "flex", alignItems:"center", justifyContent:"center",
-                    fontFamily:   "'Archivo',sans-serif",
-                    fontWeight:   800, fontSize:14,
-                    color:        "#fff",
-                    cursor:       "pointer",
-                    border:       `2px solid ${t.blueBorder}`,
-                    transition:   "opacity 0.2s",
+                    width:36, height:36, borderRadius:"50%",
+                    background: t.blue,
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                    fontFamily:"'Archivo',sans-serif",
+                    fontWeight:800, fontSize:14, color:"#fff",
+                    cursor:"pointer",
+                    border:`2px solid ${t.blueBorder}`,
+                    transition:"opacity 0.2s",
                   }}
                   onMouseEnter={e => e.currentTarget.style.opacity = "0.8"}
                   onMouseLeave={e => e.currentTarget.style.opacity = "1"}
@@ -206,9 +226,7 @@ const Navbar = () => {
                 {/* PROFILE DROPDOWN */}
                 {profileOpen && (
                   <div style={{
-                    position:   "absolute",
-                    top:        46,
-                    right:      0,
+                    position:  "absolute", top:46, right:0,
                     background: t.bgCard,
                     border:     `1px solid ${t.border}`,
                     borderRadius: 14,
@@ -218,15 +236,16 @@ const Navbar = () => {
                     boxShadow:  dark ? "0 8px 40px rgba(0,0,0,0.6)" : "0 8px 40px rgba(0,0,0,0.12)",
                     zIndex:     200,
                   }}>
-                    {/* Username header */}
                     <div style={{ padding:"10px 16px 8px", borderBottom:`1px solid ${t.border}` }}>
-                      <p style={{ fontFamily:"'Archivo',sans-serif", fontWeight:700, fontSize:13, color:t.text }}>{user.username}</p>
-                      <p style={{ fontFamily:"'Archivo',sans-serif", fontSize:11, color:t.textFaint, marginTop:2 }}>{role === "ROLE_SELLER" ? "Pharmacy Owner" : "Patient"}</p>
+                      <p style={{ fontFamily:"'Archivo',sans-serif", fontWeight:700, fontSize:13, color:t.text, margin:0 }}>{user.username}</p>
+                      <p style={{ fontFamily:"'Archivo',sans-serif", fontSize:11, color:t.textFaint, marginTop:2, marginBottom:0 }}>
+                        {role === "ROLE_SELLER" ? "Pharmacy Owner" : "Patient"}
+                      </p>
                     </div>
 
                     {[
-                      ["My Profile",  role === "ROLE_SELLER" ? "/seller" : "/user"],
-                      ["Settings",    "/settings"],
+                      ["My Profile", role === "ROLE_SELLER" ? "/seller" : "/user"],
+                      ["Settings",   "/settings"],
                     ].map(([label, path]) => (
                       <div
                         key={path}
@@ -252,9 +271,10 @@ const Navbar = () => {
 
             {/* MOBILE HAMBURGER */}
             <button
+              className="mc-hamburger"
               onClick={() => setMenuOpen(!menuOpen)}
               style={{
-                display:    "none", // shown via media query below
+                display:    "none",
                 background: "none",
                 border:     `1px solid ${t.border}`,
                 borderRadius: 8,
@@ -264,7 +284,6 @@ const Navbar = () => {
                 fontSize:   18,
                 transition: "all 0.2s",
               }}
-              className="mc-hamburger"
             >
               {menuOpen ? "✕" : "☰"}
             </button>
@@ -274,10 +293,10 @@ const Navbar = () => {
         {/* ── MOBILE MENU ── */}
         {menuOpen && (
           <div style={{
-            background:   t.bgCard,
-            borderTop:    `1px solid ${t.border}`,
-            padding:      "20px 6vw 24px",
-            animation:    "mc-slide-down 0.2s ease",
+            background:  t.bgCard,
+            borderTop:   `1px solid ${t.border}`,
+            padding:     "20px 6vw 24px",
+            animation:   "mc-slide-down 0.2s ease",
           }}>
             <ul style={{ listStyle:"none", padding:0, margin:"0 0 20px", display:"flex", flexDirection:"column", gap:0 }}>
               {activeLinks.map(([label, path]) => (
@@ -302,32 +321,14 @@ const Navbar = () => {
             </ul>
 
             <div style={{ display:"flex", gap:10, alignItems:"center" }}>
-              {/* Mobile toggle */}
-              <button
-                onClick={toggle}
-                style={{
-                  flex:1,
-                  padding:    "11px 0",
-                  borderRadius: 10,
-                  background: t.bgAlt || t.bgCard,
-                  border:     `1px solid ${t.border}`,
-                  fontFamily: "'Archivo',sans-serif",
-                  fontSize:   13, fontWeight:600,
-                  color:      t.textMuted,
-                  cursor:     "pointer",
-                  display:    "flex", alignItems:"center", justifyContent:"center", gap:7,
-                }}
-              >
-                <span>{dark ? "☀️" : "🌙"}</span>
-                {dark ? "Light mode" : "Dark mode"}
-              </button>
+              <ThemeToggleBtn mobile />
 
               {!user ? (
                 <button
                   onClick={() => { navigate("/login"); setMenuOpen(false); }}
                   style={{
                     flex:1, padding:"11px 0", borderRadius:10,
-                    background:t.blue, color:"#fff",
+                    background: t.blue, color:"#fff",
                     fontFamily:"'Archivo',sans-serif", fontWeight:700,
                     fontSize:13, border:"none", cursor:"pointer",
                   }}
@@ -347,7 +348,7 @@ const Navbar = () => {
           </div>
         )}
 
-        {/* Click-outside to close profile dropdown */}
+        {/* Click-outside overlay for profile dropdown */}
         {profileOpen && (
           <div
             style={{ position:"fixed", inset:0, zIndex:150 }}
@@ -355,14 +356,6 @@ const Navbar = () => {
           />
         )}
       </nav>
-
-      {/* Responsive hamburger visibility */}
-      <style>{`
-        @media (max-width: 768px) {
-          .mc-hamburger { display: flex !important; }
-          nav ul { display: none !important; }
-        }
-      `}</style>
     </>
   );
 };
