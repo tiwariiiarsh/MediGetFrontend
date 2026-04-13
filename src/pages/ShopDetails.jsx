@@ -1,495 +1,483 @@
-// import { useEffect, useState } from "react";
-// import { useParams } from "react-router-dom";
-// import arshMedicalStore from "../assets/arsh.jpeg";
-// import mediGet1 from "../assets/mediget1.jpg";
-// const ShopDetails = () => {
-//   const { shopId } = useParams();
-//   const [shop, setShop] = useState(null);
-//   const [loading, setLoading] = useState(true);
-
-//   const [currentPage, setCurrentPage] = useState(1);
-//   const [searchTerm, setSearchTerm] = useState("");
-//   const medicinesPerPage = 8;
-
-//   useEffect(() => {
-//     const fetchShop = async () => {
-//       try {
-//         const res = await fetch(
-//           `http://localhost:8080/api/public/shop/${shopId}`
-//         );
-
-//         if (!res.ok) throw new Error("Shop not found");
-
-//         const data = await res.json();
-//         setShop(data);
-//       } catch (err) {
-//         console.error(err);
-//         setShop(null);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchShop();
-//   }, [shopId]);
-
-//   if (loading)
-//     return (
-//       <div className="min-h-screen flex items-center justify-center text-white">
-//         Loading shop details...
-//       </div>
-//     );
-
-//   if (!shop)
-//     return (
-//       <div className="min-h-screen flex items-center justify-center text-white">
-//         Shop not found.
-//       </div>
-//     );
-
-//   // 🔎 SEARCH FILTER
-//   const filteredMedicines = shop.medicines?.filter((med) =>
-//     med.medicineName.toLowerCase().includes(searchTerm.toLowerCase())
-//   );
-
-//   // 📄 PAGINATION LOGIC
-//   const indexOfLast = currentPage * medicinesPerPage;
-//   const indexOfFirst = indexOfLast - medicinesPerPage;
-//   const currentMedicines = filteredMedicines?.slice(
-//     indexOfFirst,
-//     indexOfLast
-//   );
-
-//   const totalPages = Math.ceil(
-//     (filteredMedicines?.length || 0) / medicinesPerPage
-//   );
-
-//   return (
-//     <div className="min-h-screen px-[8vw] pt-32 pb-20 text-white">
-
-//       {/* ================= SHOP HEADER ================= */}
-//       <div className="grid md:grid-cols-2 gap-10 bg-[#0f172a] p-8 rounded-2xl border border-white/10 mb-16">
-
-//         <div>
-//           <h1 className="text-3xl font-bold text-emerald-400 mb-6">
-//             {shop.shopName}
-//           </h1>
-
-//           <p className="text-gray-400 mb-2">🏢 {shop.buildingName}</p>
-//           <p className="text-gray-400 mb-2">
-//             📍 {shop.street}, {shop.city}
-//           </p>
-//           <p className="text-gray-400 mb-2">
-//             {shop.state}, {shop.country} - {shop.pincode}
-//           </p>
-
-//           {/* 🚗 Directions Button */}
-//           <button
-//             onClick={() => {
-//               if (!navigator.geolocation) {
-//                 alert("Geolocation not supported");
-//                 return;
-//               }
-
-//               navigator.geolocation.getCurrentPosition(
-//                 (position) => {
-//                   const userLat = position.coords.latitude;
-//                   const userLng = position.coords.longitude;
-
-//                   const url = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${shop.latitude},${shop.longitude}&travelmode=driving`;
-
-//                   window.open(url, "_blank");
-//                 },
-//                 () => {
-//                   alert("Please allow location access");
-//                 }
-//               );
-//             }}
-//             className="mt-6 px-6 py-3 rounded-xl font-semibold
-//                        bg-gradient-to-r from-emerald-400 to-cyan-400
-//                        text-black hover:scale-105 transition"
-//           >
-//             🚗 Get Directions
-//           </button>
-//         </div>
-
-//         {/* 🏥 Static Shop Image */}
-//         <div className="h-96 bg-[#1e293b] rounded-xl overflow-hidden">
-//           <img
-//             src={arshMedicalStore}
-//             alt={shop.shopName}
-//             className="w-full h-full object-cover"
-//           />
-//         </div>
-//       </div>
-
-//       {/* ================= MEDICINES SECTION ================= */}
-//       <h2 className="text-2xl font-semibold mb-6">
-//         Available Medicines
-//       </h2>
-
-//       {/* 🔎 SEARCH BAR */}
-//       <div className="mb-8">
-//         <input
-//           type="text"
-//           placeholder="Search medicine..."
-//           value={searchTerm}
-//           onChange={(e) => {
-//             setSearchTerm(e.target.value);
-//             setCurrentPage(1);
-//           }}
-//           className="px-4 py-3 w-72 rounded-lg bg-[#1e293b] text-white outline-none"
-//         />
-//       </div>
-
-//       {/* 💊 MEDICINE GRID */}
-//       {currentMedicines?.length === 0 ? (
-//         <p>No medicines found.</p>
-//       ) : (
-//         <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-//           {currentMedicines?.map((med) => (
-//             <div
-//               key={med.medicineId}
-//               className="bg-[#0f172a] p-5 rounded-2xl border border-white/10
-//                          hover:shadow-[0_0_30px_rgba(16,185,129,0.25)]
-//                          hover:scale-105 transition duration-300"
-//             >
-//               <div className="h-40 bg-[#1e293b] rounded-xl overflow-hidden">
-//                 <img
-//                   // src={
-//                   //   med.image
-//                   //     ? `http://localhost:8080/images/${med.image}`
-//                   //     : "https://via.placeholder.com/200"
-//                   // }
-//                   src={mediGet1}
-//                   alt={med.medicineName}
-//                   className="h-full w-full object-cover"
-//                 />
-//               </div>
-
-//               <h3 className="mt-4 text-lg font-semibold text-emerald-400">
-//                 {med.medicineName}
-//               </h3>
-
-//               <p className="text-gray-400 text-sm line-clamp-2">
-//                 {med.description}
-//               </p>
-
-//               <div className="mt-3 flex items-center gap-2">
-//                 <span className="text-white font-bold">
-//                   ₹{med.specialPrice}
-//                 </span>
-//                 <span className="line-through text-gray-500 text-sm">
-//                   ₹{med.price}
-//                 </span>
-//                 <span className="text-red-400 text-sm">
-//                   {med.discount}% OFF
-//                 </span>
-//               </div>
-
-//               <p className="mt-2 text-sm text-gray-400">
-//                 Stock: {med.quantity}
-//               </p>
-//             </div>
-//           ))}
-//         </div>
-//       )}
-
-//       {/* 📄 PAGINATION */}
-//       {totalPages > 1 && (
-//         <div className="flex justify-center mt-12 gap-3">
-//           <button
-//             disabled={currentPage === 1}
-//             onClick={() => setCurrentPage(currentPage - 1)}
-//             className="px-4 py-2 bg-gray-700 rounded disabled:opacity-40"
-//           >
-//             Prev
-//           </button>
-
-//           {[...Array(totalPages)].map((_, index) => (
-//             <button
-//               key={index}
-//               onClick={() => setCurrentPage(index + 1)}
-//               className={`px-4 py-2 rounded ${
-//                 currentPage === index + 1
-//                   ? "bg-emerald-400 text-black"
-//                   : "bg-gray-700"
-//               }`}
-//             >
-//               {index + 1}
-//             </button>
-//           ))}
-
-//           <button
-//             disabled={currentPage === totalPages}
-//             onClick={() => setCurrentPage(currentPage + 1)}
-//             className="px-4 py-2 bg-gray-700 rounded disabled:opacity-40"
-//           >
-//             Next
-//           </button>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default ShopDetails;
-
-
-// src/pages/ShopDetails.jsx — UPDATED with real images + better UI
+// src/pages/ShopDetails.jsx
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FiSearch, FiMapPin, FiArrowLeft } from "react-icons/fi";
+import { FiSearch, FiArrowLeft, FiExternalLink, FiPackage } from "react-icons/fi";
 import { MdDirectionsCar } from "react-icons/md";
+import { useTheme } from "../components/ThemeContext";
 import mediGet1 from "../assets/mediget1.jpg";
 
+// ─── Stock badge styles ───────────────────────────────────────────────────────
+const stockStyle = (qty, dark) => {
+  if (qty > 50) return {
+    background: dark ? "rgba(37,99,235,0.12)" : "rgba(37,99,235,0.07)",
+    color:      dark ? "#3b82f6" : "#1d4ed8",
+    border:     `1px solid ${dark ? "rgba(37,99,235,0.3)" : "rgba(37,99,235,0.2)"}`,
+  };
+  if (qty > 10) return {
+    background: dark ? "rgba(245,158,11,0.1)" : "#fffbeb",
+    color:      dark ? "#fbbf24" : "#b45309",
+    border:     `1px solid ${dark ? "rgba(245,158,11,0.25)" : "#fcd34d"}`,
+  };
+  return {
+    background: dark ? "rgba(239,68,68,0.1)" : "#fef2f2",
+    color:      dark ? "#f87171" : "#b91c1c",
+    border:     `1px solid ${dark ? "rgba(239,68,68,0.25)" : "#fecaca"}`,
+  };
+};
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 const ShopDetails = () => {
   const { shopId } = useParams();
-  const navigate = useNavigate();
-  const [shop, setShop] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const navigate   = useNavigate();
+  const { dark, t } = useTheme();
+
+  const [shop,        setShop]        = useState(null);
+  const [loading,     setLoading]     = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm,  setSearchTerm]  = useState("");
   const medicinesPerPage = 8;
 
   useEffect(() => {
-    const fetchShop = async () => {
+    (async () => {
       try {
         const res = await fetch(`http://localhost:8080/api/public/shop/${shopId}`);
-        if (!res.ok) throw new Error("Shop not found");
-        const data = await res.json();
-        setShop(data);
-      } catch (err) {
-        setShop(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchShop();
+        if (!res.ok) throw new Error();
+        setShop(await res.json());
+      } catch { setShop(null); }
+      finally { setLoading(false); }
+    })();
   }, [shopId]);
-
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="w-12 h-12 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-    </div>
-  );
-
-  if (!shop) return (
-    <div className="min-h-screen flex flex-col items-center justify-center text-gray-400 gap-4">
-      <p className="text-2xl">Shop not found</p>
-      <button onClick={() => navigate(-1)}
-        className="px-5 py-2 rounded-xl bg-emerald-500 text-black font-bold">
-        Go Back
-      </button>
-    </div>
-  );
 
   const getDirections = () => {
     if (!navigator.geolocation) { alert("Geolocation not supported"); return; }
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        const url = `https://www.google.com/maps/dir/?api=1&origin=${coords.latitude},${coords.longitude}&destination=${shop.latitude},${shop.longitude}&travelmode=driving`;
-        window.open(url, "_blank");
-      },
+      ({ coords }) => window.open(
+        `https://www.google.com/maps/dir/?api=1&origin=${coords.latitude},${coords.longitude}&destination=${shop.latitude},${shop.longitude}&travelmode=driving`,
+        "_blank"
+      ),
       () => alert("Please allow location access")
     );
   };
 
-  const filteredMedicines = shop.medicines?.filter((med) =>
-    med.medicineName.toLowerCase().includes(searchTerm.toLowerCase())
+  // ─── Loading ────────────────────────────────────────────────────────────────
+  if (loading) return (
+    <div style={{ minHeight: "100vh", background: t.bg, display: "flex", alignItems: "center", justifyContent: "center", transition: "background .3s" }}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <div style={{ width: 40, height: 40, borderRadius: "50%", border: `3px solid ${t.border}`, borderTopColor: t.blue, animation: "spin .75s linear infinite" }} />
+    </div>
+  );
+
+  // ─── Not found ──────────────────────────────────────────────────────────────
+  if (!shop) return (
+    <div style={{ minHeight: "100vh", background: t.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, color: t.textMuted, fontFamily: "system-ui,-apple-system,sans-serif", transition: "background .3s" }}>
+      <p style={{ fontSize: 20, fontWeight: 700, color: t.text }}>Shop not found</p>
+      <button onClick={() => navigate(-1)} style={{ padding: "10px 24px", borderRadius: 12, background: t.blue, color: "#fff", fontWeight: 700, border: "none", cursor: "pointer", fontSize: 14 }}>
+        ← Go Back
+      </button>
+    </div>
+  );
+
+  const filteredMeds = shop.medicines?.filter(m =>
+    m.medicineName.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
+  const totalPages   = Math.ceil(filteredMeds.length / medicinesPerPage);
+  const currentMeds  = filteredMeds.slice((currentPage - 1) * medicinesPerPage, currentPage * medicinesPerPage);
+  const totalInStock = shop.medicines?.filter(m => m.quantity > 0).length ?? 0;
+  const isOpen       = shop.isOpen;
 
-  const indexOfLast = currentPage * medicinesPerPage;
-  const indexOfFirst = indexOfLast - medicinesPerPage;
-  const currentMedicines = filteredMedicines.slice(indexOfFirst, indexOfLast);
-  const totalPages = Math.ceil(filteredMedicines.length / medicinesPerPage);
-
-  const stockColor = (qty) =>
-    qty > 50 ? "text-emerald-400" : qty > 10 ? "text-yellow-400" : "text-red-400";
+  const s = {
+    page: {
+      minHeight: "100vh",
+      background: t.bg,
+      color: t.text,
+      padding: "7rem 8vw 5rem",
+      fontFamily: "system-ui,-apple-system,sans-serif",
+      transition: "background .3s,color .3s",
+    },
+    btnPrimary: {
+      display: "flex", alignItems: "center", gap: 8,
+      padding: "12px 22px", borderRadius: 12,
+      background: t.blue, color: "#fff",
+      fontWeight: 700, fontSize: 14,
+      border: "none", cursor: "pointer",
+      transition: "background .2s, transform .15s",
+      boxShadow: `0 2px 12px ${dark ? "rgba(37,99,235,0.35)" : "rgba(37,99,235,0.2)"}`,
+    },
+    btnGhost: {
+      display: "flex", alignItems: "center", gap: 8,
+      padding: "12px 20px", borderRadius: 12,
+      background: "transparent",
+      border: `1px solid ${t.border}`,
+      color: t.textMuted,
+      fontWeight: 500, fontSize: 14,
+      cursor: "pointer",
+      transition: "all .2s",
+    },
+    statCard: {
+      background: dark ? "rgba(37,99,235,0.07)" : "rgba(37,99,235,0.04)",
+      border: `1px solid ${t.blueBorder}`,
+      borderRadius: 12,
+      padding: "10px 22px",
+      textAlign: "center",
+    },
+    inputBase: {
+      paddingLeft: 40,
+      paddingRight: 16,
+      paddingTop: 11,
+      paddingBottom: 11,
+      borderRadius: 12,
+      background: t.bgCard,
+      border: `1px solid ${t.border}`,
+      color: t.text,
+      fontSize: 14,
+      outline: "none",
+      boxSizing: "border-box",
+      transition: "border .2s, box-shadow .2s",
+    },
+    grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 18 },
+    pagRow: { display: "flex", justifyContent: "center", marginTop: "2.5rem", gap: 8, flexWrap: "wrap" },
+  };
 
   return (
-    <div className="min-h-screen px-[8vw] pt-28 pb-20 text-white">
+    <div style={s.page}>
+      <style>{`
+        @keyframes spin    { to { transform: rotate(360deg); } }
+        @keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:.35} }
+        @keyframes cardGlow {
+          0%,100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
+          50%      { box-shadow: 0 0 0 4px rgba(37,99,235,0.15); }
+        }
+        .med-card-hover { animation: cardGlow 1.6s ease infinite; }
+        input::placeholder { color: ${t.textMuted}; }
+      `}</style>
 
-      {/* BACK */}
+      {/* ── BACK BUTTON ── */}
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition group"
+        style={{ ...s.btnGhost, marginBottom: "2rem", fontSize: 13 }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = t.blue; e.currentTarget.style.color = t.blue; }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.textMuted; }}
       >
-        <FiArrowLeft className="group-hover:-translate-x-1 transition" />
-        Back to Medicines
+        <FiArrowLeft size={15} /> Back to Medicines
       </button>
 
-      {/* ── SHOP HEADER ── */}
-      <div className="grid md:grid-cols-2 gap-8 bg-[#0f172a] p-8 rounded-3xl
-                      border border-white/10
-                      shadow-[0_0_60px_rgba(16,185,129,0.1)] mb-14">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <span className={`w-2.5 h-2.5 rounded-full ${shop.isOpen ? "bg-emerald-400 animate-pulse" : "bg-red-400"}`} />
-            <span className={`text-sm font-medium ${shop.isOpen ? "text-emerald-400" : "text-red-400"}`}>
-              {shop.isOpen ? "Open Now" : "Closed"}
+      {/* ── SHOP HERO CARD ── */}
+      {/* Key fix: position:relative on wrapper, absolute-fill on image side */}
+      <div style={{
+        background: t.bgCard,
+        border: `1px solid ${t.border}`,
+        borderRadius: 24,
+        overflow: "hidden",
+        marginBottom: "2.5rem",
+        boxShadow: dark ? "0 4px 40px rgba(0,0,0,.55)" : "0 4px 24px rgba(37,99,235,.07)",
+        display: "flex",          // ← flex not grid, so both sides stretch to same height
+        flexDirection: "row",
+        flexWrap: "wrap",
+        position: "relative",
+      }}>
+
+        {/* Top accent bar spanning full width */}
+        <div style={{
+          position: "absolute",
+          top: 0, left: 0, right: 0,
+          height: 4,
+          background: `linear-gradient(90deg, ${t.blue}, ${t.blueLight}, ${t.blue})`,
+          zIndex: 2,
+        }} />
+
+        {/* Left: info panel */}
+        <div style={{
+          flex: "1 1 300px",
+          padding: "44px 40px 36px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          zIndex: 1,
+        }}>
+          {/* Open / Closed badge */}
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 18,
+            background: isOpen
+              ? (dark ? "rgba(34,197,94,0.1)" : "#f0fdf4")
+              : (dark ? "rgba(239,68,68,0.1)" : "#fef2f2"),
+            border: `1px solid ${isOpen
+              ? (dark ? "rgba(34,197,94,0.3)" : "#bbf7d0")
+              : (dark ? "rgba(239,68,68,0.3)" : "#fecaca")}`,
+            borderRadius: 20, padding: "5px 14px", width: "fit-content",
+          }}>
+            <span style={{
+              width: 8, height: 8, borderRadius: "50%", display: "block", flexShrink: 0,
+              background: isOpen ? "#22c55e" : "#ef4444",
+              animation: isOpen ? "pulse 2s infinite" : "none",
+            }} />
+            <span style={{
+              fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase",
+              color: isOpen
+                ? (dark ? "#4ade80" : "#15803d")
+                : (dark ? "#f87171" : "#b91c1c"),
+            }}>
+              {isOpen ? "Open Now" : "Closed"}
             </span>
           </div>
 
-          <h1 className="text-3xl font-bold text-white mb-5">{shop.shopName}</h1>
+          <h1 style={{ fontSize: "clamp(1.5rem,3.5vw,2.2rem)", fontWeight: 800, color: t.text, margin: "0 0 16px", lineHeight: 1.15 }}>
+            {shop.shopName}
+          </h1>
 
-          <div className="space-y-2 text-gray-400 text-sm mb-6">
-            <p>🏢 {shop.buildingName}</p>
-            <p>📍 {shop.street}, {shop.city}</p>
-            <p>{shop.state}, {shop.country} — {shop.pincode}</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14, color: t.textMuted, marginBottom: 24 }}>
+            {shop.buildingName && <span>🏢 {shop.buildingName}</span>}
+            <span>📍 {shop.street}, {shop.city}</span>
+            <span style={{ fontSize: 13, opacity: 0.7 }}>{shop.state}, {shop.country} — {shop.pincode}</span>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={getDirections}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold
-                         bg-gradient-to-r from-emerald-400 to-cyan-400
-                         text-black hover:scale-105 transition
-                         shadow-[0_0_20px_rgba(16,185,129,0.4)]"
-            >
-              <MdDirectionsCar size={20} />
-              Get Directions
-            </button>
+          <div style={{ borderTop: `1px dashed ${t.border}`, marginBottom: 20 }} />
 
+          {/* Stat pills */}
+          <div style={{ display: "flex", gap: 10, marginBottom: 24, flexWrap: "wrap" }}>
+            {[
+              { label: "Total Medicines", value: shop.medicines?.length ?? 0 },
+              { label: "In Stock",        value: totalInStock },
+            ].map(st => (
+              <div key={st.label} style={s.statCard}>
+                <p style={{ fontSize: 24, fontWeight: 800, color: t.blue, margin: 0 }}>{st.value}</p>
+                <p style={{ fontSize: 10, color: t.textMuted, margin: "3px 0 0", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.09em" }}>{st.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Action buttons */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+            <button
+              style={s.btnPrimary}
+              onClick={getDirections}
+              onMouseEnter={e => { e.currentTarget.style.background = t.blueLight; e.currentTarget.style.transform = "translateY(-1px)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = t.blue; e.currentTarget.style.transform = "none"; }}
+            >
+              <MdDirectionsCar size={18} /> Get Directions
+            </button>
             {shop.latitude && shop.longitude && (
               <button
-                onClick={() => {
-                  const url = `https://www.google.com/maps?q=${shop.latitude},${shop.longitude}`;
-                  window.open(url, "_blank");
-                }}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium
-                           bg-[#1e293b] border border-white/10
-                           hover:border-cyan-400/40 hover:text-cyan-400 transition"
+                style={s.btnGhost}
+                onClick={() => window.open(`https://www.google.com/maps?q=${shop.latitude},${shop.longitude}`, "_blank")}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = t.blue; e.currentTarget.style.color = t.blue; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.textMuted; }}
               >
-                <FiMapPin />
-                View on Map
+                <FiExternalLink size={15} /> View on Map
               </button>
             )}
           </div>
         </div>
 
-        {/* Shop Image */}
-        <div className="h-72 md:h-80 rounded-2xl overflow-hidden">
+        {/* Right: image — flex:1 so it stretches to match left panel height */}
+        <div style={{
+          flex: "1 1 300px",
+          minHeight: 360,
+          position: "relative",
+          overflow: "hidden",
+          background: t.inputBg,
+        }}>
           <img
             src={shop.image ? `http://localhost:8080/images/${shop.image}` : mediGet1}
             alt={shop.shopName}
-            className="w-full h-full object-cover"
-            onError={(e) => { e.target.src = mediGet1; }}
+            style={{
+              position: "absolute",   // ← absolute fill: always covers entire div
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",     // ← fills without stretching/distorting
+              objectPosition: "center",
+              display: "block",
+            }}
+            onError={e => { e.target.src = mediGet1; }}
           />
+          {/* left fade for seamless join */}
+          <div style={{
+            position: "absolute", top: 0, left: 0, bottom: 0, width: 48, zIndex: 1,
+            background: `linear-gradient(to right, ${t.bgCard}, transparent)`,
+          }} />
         </div>
       </div>
 
-      {/* ── MEDICINES SECTION ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <h2 className="text-2xl font-bold">
-          Available Medicines
-          <span className="ml-3 text-sm font-normal text-gray-500">
-            ({filteredMedicines.length})
-          </span>
-        </h2>
-
-        <div className="relative">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+      {/* ── MEDICINES HEADER ── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14, marginBottom: 18 }}>
+        <div>
+          <h2 style={{ fontSize: "1.3rem", fontWeight: 800, color: t.text, margin: 0 }}>Available Medicines</h2>
+          <p style={{ fontSize: 13, color: t.textMuted, margin: "4px 0 0" }}>{filteredMeds.length} items found</p>
+        </div>
+        <div style={{ position: "relative" }}>
+          <FiSearch style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", color: t.textMuted, width: 15, height: 15, pointerEvents: "none" }} />
           <input
             type="text"
             placeholder="Search in this shop..."
             value={searchTerm}
-            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="pl-10 pr-4 py-2.5 w-72 rounded-xl bg-[#1e293b] text-white text-sm
-                       border border-white/10 focus:outline-none focus:border-emerald-400 transition"
+            onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+            style={{ ...s.inputBase, width: 260, paddingLeft: 40 }}
+            onFocus={e => { e.target.style.borderColor = t.blue; e.target.style.boxShadow = `0 0 0 3px ${t.blueBg}`; }}
+            onBlur={e  => { e.target.style.borderColor = t.border; e.target.style.boxShadow = "none"; }}
           />
         </div>
       </div>
 
-      {/* GRID */}
-      {currentMedicines.length === 0 ? (
-        <p className="text-gray-500 text-center py-12">No medicines found.</p>
+      <div style={{ height: 1, background: t.border, marginBottom: 22, opacity: 0.5 }} />
+
+      {/* ── MEDICINE GRID ── */}
+      {currentMeds.length === 0 ? (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200, color: t.textMuted, fontSize: 14 }}>
+          No medicines match your search.
+        </div>
       ) : (
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {currentMedicines.map((med) => (
-            <div
-              key={med.medicineId}
-              className="group bg-[#0f172a] rounded-2xl border border-white/10
-                         hover:border-emerald-400/40
-                         hover:shadow-[0_0_30px_rgba(16,185,129,0.2)]
-                         transition duration-300 overflow-hidden"
-            >
-              <div className="h-40 bg-[#1e293b] overflow-hidden relative">
-                <img
-                  src={med.image ? `http://localhost:8080/images/${med.image}` : mediGet1}
-                  alt={med.medicineName}
-                  className="h-full w-full object-cover group-hover:scale-105 transition duration-500"
-                  onError={(e) => { e.target.src = mediGet1; }}
-                />
-                {med.discount > 0 && (
-                  <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                    {med.discount}% OFF
-                  </span>
-                )}
-              </div>
-
-              <div className="p-4">
-                <h3 className="text-emerald-400 font-semibold text-sm mb-1">
-                  {med.medicineName}
-                </h3>
-                <p className="text-gray-500 text-xs line-clamp-2 mb-3">{med.description}</p>
-
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-white font-bold">₹{med.specialPrice?.toFixed(2)}</span>
-                  {med.price !== med.specialPrice && (
-                    <span className="line-through text-gray-600 text-sm">₹{med.price}</span>
-                  )}
-                </div>
-
-                <p className={`text-xs font-medium ${stockColor(med.quantity)}`}>
-                  📦 Stock: {med.quantity}
-                </p>
-
-                {med.expiryDate && (
-                  <p className="text-xs text-gray-600 mt-1">
-                    Exp: {new Date(med.expiryDate).toLocaleDateString("en-IN")}
-                  </p>
-                )}
-              </div>
-            </div>
+        <div style={s.grid}>
+          {currentMeds.map(med => (
+            <ShopMedCard key={med.medicineId} med={med} t={t} dark={dark} />
           ))}
         </div>
       )}
 
-      {/* PAGINATION */}
+      {/* ── PAGINATION ── */}
       {totalPages > 1 && (
-        <div className="flex justify-center mt-10 gap-2">
-          <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(currentPage - 1)}
-            className="px-4 py-2 bg-[#1e293b] rounded-lg disabled:opacity-30 hover:bg-[#334155] transition"
-          >
-            ← Prev
-          </button>
+        <div style={s.pagRow}>
+          <PagBtn disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} t={t} dark={dark}>← Prev</PagBtn>
           {[...Array(totalPages)].map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentPage(i + 1)}
-              className={`px-4 py-2 rounded-lg transition ${
-                currentPage === i + 1
-                  ? "bg-gradient-to-r from-emerald-400 to-cyan-400 text-black font-bold"
-                  : "bg-[#1e293b] hover:bg-[#334155]"
-              }`}
-            >
-              {i + 1}
-            </button>
+            <PagBtn key={i} active={currentPage === i + 1} onClick={() => setCurrentPage(i + 1)} t={t} dark={dark}>{i + 1}</PagBtn>
           ))}
-          <button
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(currentPage + 1)}
-            className="px-4 py-2 bg-[#1e293b] rounded-lg disabled:opacity-30 hover:bg-[#334155] transition"
-          >
-            Next →
-          </button>
+          <PagBtn disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} t={t} dark={dark}>Next →</PagBtn>
         </div>
       )}
     </div>
   );
 };
+
+// ─── Shop Medicine Card ────────────────────────────────────────────────────────
+const ShopMedCard = ({ med, t, dark }) => {
+  const [hov, setHov] = useState(false);
+  const sk = stockStyle(med.quantity, dark);
+
+  return (
+    <div
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      className={hov ? "med-card-hover" : ""}
+      style={{
+        background: t.bgCard,
+        border: `2px solid ${hov ? t.blue : t.border}`,
+        borderRadius: 16,
+        overflow: "hidden",
+        transition: "border-color .25s ease, transform .25s cubic-bezier(.34,1.56,.64,1)",
+        transform: hov ? "translateY(-4px)" : "none",
+        ...(hov ? {} : {
+          boxShadow: dark ? "0 2px 10px rgba(0,0,0,.45)" : "0 1px 6px rgba(0,0,0,.05)",
+        }),
+      }}
+    >
+      {/* Top accent bar */}
+      <div style={{
+        height: 3,
+        background: hov
+          ? t.blue
+          : `linear-gradient(90deg, transparent, ${t.blueBorder}, transparent)`,
+        transition: "background .3s ease",
+        flexShrink: 0,
+      }} />
+
+      {/* Image */}
+      <div style={{ position: "relative", height: 150, overflow: "hidden", background: t.inputBg }}>
+        <img
+          src={med.image ? `http://localhost:8080/images/${med.image}` : mediGet1}
+          alt={med.medicineName}
+          style={{
+            width: "100%", height: "100%", objectFit: "cover",
+            transition: "transform .4s ease",
+            transform: hov ? "scale(1.07)" : "scale(1)",
+          }}
+          onError={e => { e.target.src = mediGet1; }}
+        />
+        {med.discount > 0 && (
+          <span style={{
+            position: "absolute", top: 10, right: 10,
+            background: t.blue, color: "#fff",
+            fontSize: 10, fontWeight: 800,
+            padding: "3px 9px", borderRadius: 16,
+            boxShadow: "0 2px 8px rgba(37,99,235,0.4)",
+          }}>
+            {med.discount}% OFF
+          </span>
+        )}
+        <div style={{
+          position: "absolute", bottom: 0, left: 0, right: 0, height: 24,
+          background: `linear-gradient(to top, ${t.bgCard}, transparent)`,
+        }} />
+      </div>
+
+      {/* Body */}
+      <div style={{ padding: "14px 16px" }}>
+        <p style={{ fontSize: 13, fontWeight: 800, color: t.blue, margin: "0 0 3px", lineHeight: 1.3 }}>
+          {med.medicineName}
+        </p>
+        <p style={{
+          fontSize: 11, color: t.textMuted, margin: "0 0 10px",
+          overflow: "hidden", display: "-webkit-box",
+          WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.5,
+        }}>
+          {med.description}
+        </p>
+
+        <div style={{ borderTop: `1px dashed ${t.border}`, marginBottom: 10 }} />
+
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
+          <span style={{ fontSize: 18, fontWeight: 800, color: t.text }}>
+            ₹{med.specialPrice?.toFixed(2)}
+          </span>
+          {med.price !== med.specialPrice && (
+            <span style={{ fontSize: 11, color: t.textFaint, textDecoration: "line-through" }}>
+              ₹{med.price}
+            </span>
+          )}
+        </div>
+
+        <div style={{ borderTop: `1px solid ${t.border}`, marginBottom: 10, opacity: 0.5 }} />
+
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 5,
+          borderRadius: 7, padding: "3px 9px",
+          fontSize: 11, fontWeight: 700,
+          width: "fit-content",
+          marginBottom: med.expiryDate ? 8 : 0,
+          ...sk,
+        }}>
+          <FiPackage size={11} /> Stock: {med.quantity}
+        </div>
+
+        {med.expiryDate && (
+          <p style={{ fontSize: 11, color: t.textMuted, margin: "4px 0 0" }}>
+            Exp: {new Date(med.expiryDate).toLocaleDateString("en-IN")}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ─── Pagination Button ─────────────────────────────────────────────────────────
+const PagBtn = ({ children, active, disabled, onClick, t, dark }) => (
+  <button
+    disabled={disabled}
+    onClick={onClick}
+    style={{
+      padding: "8px 16px", borderRadius: 10, fontSize: 13,
+      fontWeight: active ? 700 : 500,
+      cursor: disabled ? "not-allowed" : "pointer",
+      background: active ? t.blue : t.bgCard,
+      color: active ? "#fff" : t.textMuted,
+      border: `1px solid ${active ? t.blue : t.border}`,
+      opacity: disabled ? 0.35 : 1,
+      transition: "all .18s",
+      boxShadow: active
+        ? `0 2px 8px ${dark ? "rgba(37,99,235,0.35)" : "rgba(37,99,235,0.2)"}`
+        : "none",
+    }}
+  >
+    {children}
+  </button>
+);
 
 export default ShopDetails;

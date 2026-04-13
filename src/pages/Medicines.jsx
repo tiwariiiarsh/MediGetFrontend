@@ -1,678 +1,498 @@
-// import { useEffect, useState } from "react";
-// import { useNavigate } from "react-router-dom";
-// import vitaminc from "../assets/vitamin c.jpeg";
-
-// const Medicines = () => {
-//   const navigate = useNavigate();
-//   const [medicines, setMedicines] = useState([]);
-//   const [page, setPage] = useState(0);
-//   const [totalPages, setTotalPages] = useState(0);
-//   const [loading, setLoading] = useState(false);
-
-//   const [keyword, setKeyword] = useState("");
-//   const [radius, setRadius] = useState(5);
-//   const [isSearching, setIsSearching] = useState(false);
-
-//   const [userLocation, setUserLocation] = useState(null);
-//   const [locationError, setLocationError] = useState("");
-
-//   // ================= GET USER LOCATION =================
-//   useEffect(() => {
-//     if (!navigator.geolocation) {
-//       setLocationError("Geolocation not supported by browser.");
-//       return;
-//     }
-
-//     navigator.geolocation.getCurrentPosition(
-//       (position) => {
-//         setUserLocation({
-//           lat: position.coords.latitude,
-//           lng: position.coords.longitude,
-//         });
-//       },
-//       (error) => {
-//         setLocationError("Location permission denied.");
-//         console.error(error);
-//       }
-//     );
-//   }, []);
-
-//   // ================= FETCH PAGINATED =================
-//   const fetchMedicines = async (pageNumber = 0, pageSize = 12) => {
-//     try {
-//       setLoading(true);
-//       setIsSearching(false);
-
-//       const res = await fetch(
-//         `http://localhost:8080/api/public/medicines?pageNumber=${pageNumber}&pageSize=${pageSize}`
-//       );
-
-//       const data = await res.json();
-
-//       setMedicines(data.content || []);
-//       setTotalPages(data.totalPages || 0);
-
-//       setLoading(false);
-//     } catch (err) {
-//       console.error(err);
-//       setLoading(false);
-//     }
-//   };
-
-//   // ================= SEARCH NEARBY =================
-//   const handleSearch = async () => {
-//     if (!userLocation) {
-//       alert("Please enable location to search nearby medicines.");
-//       return;
-//     }
-
-//     try {
-//       setLoading(true);
-//       setIsSearching(true);
-//       setPage(0);
-
-//       const res = await fetch(
-//         `http://localhost:8080/api/public/medicines/nearby?keyword=${keyword}&userLat=${userLocation.lat}&userLng=${userLocation.lng}&radiusKm=${radius}`
-//       );
-
-//       const data = await res.json();
-
-//       setMedicines(Array.isArray(data) ? data : []);
-//       setTotalPages(0);
-
-//       setLoading(false);
-//     } catch (err) {
-//       console.error(err);
-//       setLoading(false);
-//     }
-//   };
-
-//   // ================= RESET =================
-//   const handleReset = () => {
-//     setKeyword("");
-//     setRadius(5);
-//     setIsSearching(false);
-//     setPage(0);
-//     fetchMedicines(0);
-//   };
-
-//   // ================= AUTO LOAD PAGINATION =================
-//   useEffect(() => {
-//     if (!isSearching) {
-//       fetchMedicines(page);
-//     }
-//   }, [page]);
-
-//   return (
-//     <div className="min-h-screen px-[8vw] pt-32 pb-20 text-white">
-
-//       {/* ================= LOCATION STATUS ================= */}
-//       {locationError && (
-//         <p className="text-red-400 mb-4">{locationError}</p>
-//       )}
-
-//       {/* ================= SEARCH SECTION ================= */}
-//       <div className="bg-[#0f172a] p-6 rounded-xl mb-12 border border-white/10">
-//         <div className="flex flex-col md:flex-row gap-4">
-
-//           <input
-//             type="text"
-//             placeholder="Search medicine..."
-//             value={keyword}
-//             onChange={(e) => setKeyword(e.target.value)}
-//             className="flex-1 px-4 py-3 rounded-lg bg-[#1e293b]"
-//           />
-
-//           <input
-//             type="number"
-//             placeholder="Radius (km)"
-//             value={radius}
-//             onChange={(e) => setRadius(e.target.value)}
-//             className="w-32 px-4 py-3 rounded-lg bg-[#1e293b]"
-//           />
-
-//           <button
-//             onClick={handleSearch}
-//             className="px-6 py-3 rounded-lg font-semibold
-//                        bg-gradient-to-r from-emerald-400 to-cyan-400
-//                        text-black hover:scale-105 transition"
-//           >
-//             Search Nearby
-//           </button>
-
-//           <button
-//             onClick={handleReset}
-//             className="px-6 py-3 rounded-lg bg-red-700"
-//           >
-//             Reset
-//           </button>
-
-//         </div>
-//       </div>
-
-//       {/* ================= GRID ================= */}
-//       {loading ? (
-//         <p className="text-center text-gray-400">Loading...</p>
-//       ) : (
-//         <>
-//           <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-
-//             {medicines.length === 0 ? (
-//               <p>No medicines found</p>
-//             ) : (
-//               medicines.map((med) => (
-//                 <div
-//                   key={med.medicineId}
-//                   className="bg-[#0f172a] p-5 rounded-2xl border border-white/10
-//                              hover:shadow-[0_0_30px_rgba(16,185,129,0.25)]
-//                              hover:scale-105 transition duration-300"
-//                 >
-//                   <div className="h-40 bg-[#1e293b] rounded-xl overflow-hidden">
-//                     <img
-//                       // src={med.image}
-//                       src={vitaminc}
-//                       alt={med.medicineName}
-//                       className="h-full w-full object-cover"
-//                     />
-//                   </div>
-
-//                   <h2 className="mt-4 text-lg font-semibold text-emerald-400">
-//                     {med.medicineName}
-//                   </h2>
-
-//                   <p className="text-gray-400 text-sm line-clamp-2">
-//                     {med.description}
-//                   </p>
-
-//                   <div className="mt-3 flex items-center gap-2">
-//                     <span className="text-white font-bold">
-//                       ₹{med.specialPrice}
-//                     </span>
-
-//                     <span className="line-through text-gray-500 text-sm">
-//                       ₹{med.price}
-//                     </span>
-
-//                     <span className="text-red-400 text-sm">
-//                       {med.discount}% OFF
-//                     </span>
-//                   </div>
-
-//                   <div className="mt-3 text-sm text-gray-400">
-//                     <p>🏥 {med.shopName}</p>
-//                     <p>📍 {med.shopCity}</p>
-
-//                     {med.distance !== null &&
-//                       med.distance !== undefined && (
-//                         <p className="text-cyan-400">
-//                           🚗 {med.distance.toFixed(2)} km away
-//                         </p>
-//                       )}
-//                   </div>
-
-//                   {/* <button
-//                     className="mt-4 w-full py-2 rounded-xl
-//                                bg-gradient-to-r from-emerald-400 to-cyan-400
-//                                text-black font-semibold"
-//                   >
-//                     Check Shop
-//                   </button> */}
-//                   {/* console.log(med); */}
-//                  <button
-//   onClick={() => {
-//     if (med.shopId) {
-//       navigate(`/shop/${med.shopId}`);
-//     } else {
-//       alert("Shop ID not available");
-//     }
-//   }}
-//   className="mt-4 w-full py-2 rounded-xl
-//              bg-gradient-to-r from-emerald-400 to-cyan-400
-//              text-black font-semibold"
-// >
-//   Check Shop
-// </button>
-
-                  
-//                 </div>
-//               ))
-//             )}
-//           </div>
-
-//           {/* ================= PAGINATION ================= */}
-//           {!isSearching && totalPages > 1 && (
-//             <div className="flex justify-center mt-12 gap-3">
-//               <button
-//                 disabled={page === 0}
-//                 onClick={() => setPage(page - 1)}
-//                 className="px-4 py-2 bg-gray-700 rounded disabled:opacity-40"
-//               >
-//                 Prev
-//               </button>
-
-//               {[...Array(totalPages)].map((_, index) => (
-//                 <button
-//                   key={index}
-//                   onClick={() => setPage(index)}
-//                   className={`px-4 py-2 rounded ${
-//                     page === index
-//                       ? "bg-emerald-400 text-black"
-//                       : "bg-gray-700"
-//                   }`}
-//                 >
-//                   {index + 1}
-//                 </button>
-//               ))}
-
-//               <button
-//                 disabled={page === totalPages - 1}
-//                 onClick={() => setPage(page + 1)}
-//                 className="px-4 py-2 bg-gray-700 rounded disabled:opacity-40"
-//               >
-//                 Next
-//               </button>
-//             </div>
-//           )}
-//         </>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default Medicines;
-
-
-
-// // import { FaExclamationTriangle } from "react-icons/fa";
-// // import { useSelector } from "react-redux";
-// // import Filter from "../components/Filter";
-// // import MedicineCard from "../components/MedicineCard";
-// // import Loader from "../shared/Loader";
-// // import Paginations from "../components/Pagination";
-
-// // const Medicines = () => {
-
-// //   const { medicines, pagination } = useSelector(
-// //     (state) => state.medicine
-// //   );
-
-// //   const { isLoading, errorMessage } = useSelector(
-// //     (state) => state.error
-// //   );
-
-// //   // 🔥 Custom hook handles fetching
-// //   Filter();
-
-// //   return (
-// //     <div className="lg:px-14 sm:px-8 px-4 py-14 bg-gray-800 min-h-screen">
-
-// //       {/* FILTER */}
-// //       <Filter />
-
-// //       {isLoading ? (
-// //         <Loader />
-// //       ) : errorMessage ? (
-// //         <div className="flex justify-center items-center h-[200px]">
-// //           <FaExclamationTriangle className="text-slate-800 text-3xl mr-2" />
-// //           <span className="text-slate-800 text-lg font-medium">
-// //             {errorMessage}
-// //           </span>
-// //         </div>
-// //       ) : (
-// //         <div className="min-h-[700px]">
-
-// //           {/* GRID */}
-// //           <div className="pb-6 pt-14 grid 2xl:grid-cols-4 lg:grid-cols-4 sm:grid-cols-3 gap-y-6 gap-x-6">
-// //             {medicines &&
-// //               medicines.map((item) => (
-// //                 <MedicineCard key={item.medicineId} {...item} />
-// //               ))}
-// //           </div>
-
-// //           {/* PAGINATION */}
-// //           <div className="flex justify-center pt-10">
-// //             <Paginations
-// //               numberOfPage={pagination?.totalPages}
-// //               totalProducts={pagination?.totalElements}
-// //             />
-// //           </div>
-
-// //         </div>
-// //       )}
-// //     </div>
-// //   );
-// // };
-
-// // export default Medicines;
-
-
-
-// src/pages/Medicines.jsx — UPDATED with alternatives, better UI
+// src/pages/Medicines.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiSearch, FiMapPin, FiRefreshCw, FiAlertCircle } from "react-icons/fi";
-import { MdOutlineLocalPharmacy } from "react-icons/md";
+import {
+  FiSearch, FiMapPin, FiRefreshCw,
+  FiAlertCircle, FiPackage, FiCrosshair,
+} from "react-icons/fi";
+import { RiMedicineBottleLine } from "react-icons/ri";
+import { useTheme } from "../components/ThemeContext";
 import AlternativesMedicineModal from "../components/AlternativesMedicineModal";
 import vitaminc from "../assets/vitamin c.jpeg";
 
+// ─── Stock badge styles using theme tokens ────────────────────────────────────
+const stockStyle = (qty, t, dark) => {
+  if (qty > 50) return {
+    background: dark ? "rgba(37,99,235,0.12)" : "rgba(37,99,235,0.07)",
+    color:      dark ? "#3b82f6" : "#1d4ed8",
+    border:     `1px solid ${dark ? "rgba(37,99,235,0.3)" : "rgba(37,99,235,0.2)"}`,
+  };
+  if (qty > 10) return {
+    background: dark ? "rgba(245,158,11,0.1)" : "#fffbeb",
+    color:      dark ? "#fbbf24" : "#b45309",
+    border:     `1px solid ${dark ? "rgba(245,158,11,0.25)" : "#fcd34d"}`,
+  };
+  return {
+    background: dark ? "rgba(239,68,68,0.1)" : "#fef2f2",
+    color:      dark ? "#f87171" : "#b91c1c",
+    border:     `1px solid ${dark ? "rgba(239,68,68,0.25)" : "#fecaca"}`,
+  };
+};
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 const Medicines = () => {
   const navigate = useNavigate();
-  const [medicines, setMedicines] = useState([]);
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const { dark, t } = useTheme();
 
-  const [keyword, setKeyword] = useState("");
-  const [radius, setRadius] = useState(5);
-  const [isSearching, setIsSearching] = useState(false);
-
-  const [userLocation, setUserLocation] = useState(null);
-  const [locationError, setLocationError] = useState("");
-
-  // Alternatives modal
-  const [selectedMedicine, setSelectedMedicine] = useState(null);
-  const [showAlternatives, setShowAlternatives] = useState(false);
+  const [medicines,     setMedicines]    = useState([]);
+  const [page,          setPage]         = useState(0);
+  const [totalPages,    setTotalPages]   = useState(0);
+  const [loading,       setLoading]      = useState(false);
+  const [keyword,       setKeyword]      = useState("");
+  const [radius,        setRadius]       = useState(5);
+  const [isSearching,   setIsSearching]  = useState(false);
+  const [userLocation,  setUserLocation] = useState(null);
+  const [locationError, setLocationError]= useState("");
+  const [selectedMed,   setSelectedMed]  = useState(null);
+  const [showAlt,       setShowAlt]      = useState(false);
 
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setLocationError("Geolocation not supported.");
-      return;
-    }
+    if (!navigator.geolocation) { setLocationError("Geolocation not supported."); return; }
     navigator.geolocation.getCurrentPosition(
       (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => setLocationError("Location permission denied.")
+      ()    => setLocationError("Location permission denied.")
     );
   }, []);
 
   const fetchMedicines = async (pageNumber = 0) => {
     try {
-      setLoading(true);
-      setIsSearching(false);
-      const res = await fetch(
-        `http://localhost:8080/api/public/medicines?pageNumber=${pageNumber}&pageSize=12`
-      );
+      setLoading(true); setIsSearching(false);
+      const res  = await fetch(`http://localhost:8080/api/public/medicines?pageNumber=${pageNumber}&pageSize=12`);
       const data = await res.json();
-      setMedicines(data.content || []);
-      setTotalPages(data.totalPages || 0);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+      setMedicines(data.content || []); setTotalPages(data.totalPages || 0);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
   };
 
   const handleSearch = async () => {
-    if (!userLocation) {
-      alert("Please enable location to search nearby medicines.");
-      return;
-    }
+    if (!userLocation) { alert("Please enable location."); return; }
     try {
-      setLoading(true);
-      setIsSearching(true);
-      setPage(0);
-      const res = await fetch(
-        `http://localhost:8080/api/public/medicines/nearby?keyword=${keyword}&userLat=${userLocation.lat}&userLng=${userLocation.lng}&radiusKm=${radius}`
-      );
+      setLoading(true); setIsSearching(true); setPage(0);
+      const res  = await fetch(`http://localhost:8080/api/public/medicines/nearby?keyword=${keyword}&userLat=${userLocation.lat}&userLng=${userLocation.lng}&radiusKm=${radius}`);
       const data = await res.json();
-      setMedicines(Array.isArray(data) ? data : []);
-      setTotalPages(0);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+      setMedicines(Array.isArray(data) ? data : []); setTotalPages(0);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
   };
 
   const handleReset = () => {
-    setKeyword("");
-    setRadius(5);
-    setIsSearching(false);
-    setPage(0);
-    fetchMedicines(0);
+    setKeyword(""); setRadius(5); setIsSearching(false); setPage(0); fetchMedicines(0);
   };
 
-  useEffect(() => {
-    if (!isSearching) fetchMedicines(page);
-  }, [page]);
+  useEffect(() => { if (!isSearching) fetchMedicines(page); }, [page]);
 
-  const openAlternatives = (med) => {
-    setSelectedMedicine(med);
-    setShowAlternatives(true);
+  // ─── Styles derived from live t tokens ─────────────────────────────────────
+  const s = {
+    page: {
+      minHeight: "100vh",
+      background: t.bg,
+      color: t.text,
+      padding: "8rem 8vw 5rem",
+      transition: "background 0.3s, color 0.3s",
+    },
+    panel: {
+      background: t.bgCard,
+      border: `1px solid ${t.border}`,
+      borderRadius: 20,
+      padding: "20px 22px",
+      marginBottom: "2.5rem",
+      boxShadow: dark
+        ? "0 4px 32px rgba(0,0,0,0.55)"
+        : "0 2px 16px rgba(0,0,0,0.06)",
+    },
+    input: {
+      width: "100%",
+      boxSizing: "border-box",
+      paddingLeft: 42,
+      paddingRight: 16,
+      paddingTop: 12,
+      paddingBottom: 12,
+      borderRadius: 12,
+      background: t.inputBg,
+      border: `1px solid ${t.border}`,
+      color: t.text,
+      fontSize: 14,
+      outline: "none",
+      transition: "border 0.2s, box-shadow 0.2s",
+    },
+    btnPrimary: {
+      padding: "12px 28px",
+      borderRadius: 12,
+      background: t.blue,
+      color: "#fff",
+      fontWeight: 700,
+      fontSize: 14,
+      border: "none",
+      cursor: "pointer",
+      whiteSpace: "nowrap",
+      transition: "background 0.2s, transform 0.15s",
+      boxShadow: `0 2px 12px ${dark ? "rgba(37,99,235,0.35)" : "rgba(37,99,235,0.2)"}`,
+    },
+    btnGhost: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      padding: "12px 20px",
+      borderRadius: 12,
+      background: "transparent",
+      border: `1px solid ${t.border}`,
+      color: t.textMuted,
+      fontWeight: 500,
+      fontSize: 14,
+      cursor: "pointer",
+      whiteSpace: "nowrap",
+      transition: "all 0.2s",
+    },
+    grid: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))",
+      gap: 20,
+    },
+    pagRow: {
+      display: "flex",
+      justifyContent: "center",
+      marginTop: "3rem",
+      gap: 8,
+      flexWrap: "wrap",
+    },
   };
 
   return (
-    <div className="min-h-screen px-[8vw] pt-32 pb-20 text-white">
+    <div style={s.page}>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes cardGlow {
+          0%,100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
+          50%      { box-shadow: 0 0 0 4px rgba(37,99,235,0.15); }
+        }
+        .med-card-hover { animation: cardGlow 1.6s ease infinite; }
+        input::placeholder { color: ${t.textMuted}; }
+      `}</style>
 
       {/* ── HEADER ── */}
-      <div className="mb-10">
-        <h1 className="text-4xl font-bold">
-          Find <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-            Medicines
+      <div style={{ marginBottom: "2.5rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 8 }}>
+          <div style={{ width: 3, height: 22, background: t.blue, borderRadius: 2 }} />
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: t.blue }}>
+            MediFind
           </span>
+        </div>
+        <h1 style={{ fontSize: "clamp(1.8rem,4vw,2.5rem)", fontWeight: 800, color: t.text, margin: 0, lineHeight: 1.1 }}>
+          Find Medicines
         </h1>
-        <p className="text-gray-400 mt-2">
-          Search nearby pharmacies in real-time with live stock info
+        <p style={{ color: t.textMuted, marginTop: 8, fontSize: 15 }}>
+          Search nearby pharmacies with live stock &amp; location data
         </p>
       </div>
 
-      {/* ── LOCATION BANNER ── */}
+      {/* ── LOCATION BANNERS ── */}
       {locationError && (
-        <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 rounded-xl px-5 py-3 mb-6 text-red-400">
-          <FiAlertCircle />
-          <span>{locationError}</span>
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10,
+          background: dark ? "rgba(239,68,68,0.1)" : "#fef2f2",
+          border: `1px solid ${dark ? "rgba(239,68,68,0.25)" : "#fecaca"}`,
+          borderRadius: 12, padding: "12px 18px", marginBottom: 14,
+          color: dark ? "#f87171" : "#b91c1c", fontSize: 13,
+        }}>
+          <FiAlertCircle size={15} /> {locationError}
         </div>
       )}
       {userLocation && (
-        <div className="flex items-center gap-2 text-emerald-400 text-sm mb-6">
-          <FiMapPin className="animate-pulse" />
-          <span>Location detected — searching nearby pharmacies</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, color: t.blue, fontSize: 13, marginBottom: 20, fontWeight: 500 }}>
+          <FiCrosshair size={14} /> Location detected — ready to search nearby pharmacies
         </div>
       )}
 
-      {/* ── SEARCH BAR ── */}
-      <div className="bg-[#0f172a]/80 backdrop-blur border border-white/10 rounded-2xl p-5 mb-10">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+      {/* ── SEARCH PANEL ── */}
+      <div style={s.panel}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+
+          {/* keyword */}
+          <div style={{ position: "relative", flex: "1 1 200px" }}>
+            <FiSearch style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: t.textMuted, pointerEvents: "none" }} size={15} />
             <input
               type="text"
               placeholder="Search medicine name..."
               value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className="w-full pl-11 pr-4 py-3 rounded-xl bg-[#1e293b] text-white
-                         border border-white/10 focus:outline-none focus:border-emerald-400 transition"
+              onChange={e => setKeyword(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && handleSearch()}
+              style={s.input}
+              onFocus={e => { e.target.style.borderColor = t.blue; e.target.style.boxShadow = `0 0 0 3px ${t.blueBg}`; }}
+              onBlur={e  => { e.target.style.borderColor = t.border; e.target.style.boxShadow = "none"; }}
             />
           </div>
 
-          <div className="relative w-44">
-            <FiMapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+          {/* radius */}
+          <div style={{ position: "relative", flex: "0 0 148px" }}>
+            <FiMapPin style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: t.textMuted, pointerEvents: "none" }} size={15} />
             <input
               type="number"
-              placeholder="Radius (km)"
+              placeholder="Radius km"
               value={radius}
-              onChange={(e) => setRadius(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 rounded-xl bg-[#1e293b] text-white
-                         border border-white/10 focus:outline-none focus:border-cyan-400 transition"
+              onChange={e => setRadius(e.target.value)}
+              style={s.input}
+              onFocus={e => { e.target.style.borderColor = t.blue; e.target.style.boxShadow = `0 0 0 3px ${t.blueBg}`; }}
+              onBlur={e  => { e.target.style.borderColor = t.border; e.target.style.boxShadow = "none"; }}
             />
           </div>
 
           <button
+            style={s.btnPrimary}
             onClick={handleSearch}
-            className="px-7 py-3 rounded-xl font-semibold text-black
-                       bg-gradient-to-r from-emerald-400 to-cyan-400
-                       hover:shadow-[0_0_25px_rgba(16,185,129,0.5)]
-                       hover:scale-[1.02] transition duration-200"
+            onMouseEnter={e => { e.currentTarget.style.background = t.blueLight; e.currentTarget.style.transform = "translateY(-1px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = t.blue; e.currentTarget.style.transform = "none"; }}
           >
             Search Nearby
           </button>
 
           <button
+            style={s.btnGhost}
             onClick={handleReset}
-            className="px-5 py-3 rounded-xl bg-[#1e293b] border border-white/10
-                       hover:bg-red-500/20 hover:border-red-500/40 transition flex items-center gap-2"
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "#ef4444"; e.currentTarget.style.color = "#ef4444"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.textMuted; }}
           >
-            <FiRefreshCw />
-            Reset
+            <FiRefreshCw size={14} /> Reset
           </button>
         </div>
       </div>
 
-      {/* ── GRID ── */}
+      {/* ── CONTENT ── */}
       {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="w-12 h-12 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 260, gap: 16 }}>
+          <div style={{
+            width: 38, height: 38, borderRadius: "50%",
+            border: `3px solid ${t.border}`,
+            borderTopColor: t.blue,
+            animation: "spin .75s linear infinite",
+          }} />
+          <span style={{ color: t.textMuted, fontSize: 14 }}>Loading medicines...</span>
+        </div>
+      ) : medicines.length === 0 ? (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 260, gap: 12, color: t.textMuted }}>
+          <RiMedicineBottleLine size={56} style={{ opacity: 0.25 }} />
+          <p style={{ fontSize: 15 }}>No medicines found. Try a different keyword or radius.</p>
         </div>
       ) : (
         <>
-          {medicines.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-              <MdOutlineLocalPharmacy className="text-6xl mb-4 text-gray-600" />
-              <p>No medicines found. Try a different keyword or radius.</p>
-            </div>
-          ) : (
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {medicines.map((med) => (
-                <MedicineCard
-                  key={med.medicineId}
-                  med={med}
-                  onViewShop={() => med.shopId
-                    ? navigate(`/shop/${med.shopId}`)
-                    : alert("Shop ID not available")}
-                  onAlternatives={() => openAlternatives(med)}
-                />
-              ))}
-            </div>
-          )}
+          <div style={s.grid}>
+            {medicines.map(med => (
+              <MedicineCard
+                key={med.medicineId}
+                med={med}
+                dark={dark}
+                t={t}
+                onViewShop={() => med.shopId ? navigate(`/shop/${med.shopId}`) : alert("Shop ID not available")}
+                onAlternatives={() => { setSelectedMed(med); setShowAlt(true); }}
+              />
+            ))}
+          </div>
 
-          {/* ── PAGINATION ── */}
           {!isSearching && totalPages > 1 && (
-            <div className="flex justify-center mt-12 gap-2">
-              <button
-                disabled={page === 0}
-                onClick={() => setPage(page - 1)}
-                className="px-4 py-2 bg-[#1e293b] rounded-lg disabled:opacity-30 hover:bg-[#334155] transition"
-              >
-                ← Prev
-              </button>
-
-              {[...Array(Math.min(totalPages, 7))].map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setPage(index)}
-                  className={`px-4 py-2 rounded-lg font-medium transition ${
-                    page === index
-                      ? "bg-gradient-to-r from-emerald-400 to-cyan-400 text-black"
-                      : "bg-[#1e293b] hover:bg-[#334155]"
-                  }`}
-                >
-                  {index + 1}
-                </button>
+            <div style={s.pagRow}>
+              <PagBtn disabled={page === 0} onClick={() => setPage(p => p - 1)} t={t} dark={dark}>← Prev</PagBtn>
+              {[...Array(Math.min(totalPages, 7))].map((_, i) => (
+                <PagBtn key={i} active={page === i} onClick={() => setPage(i)} t={t} dark={dark}>{i + 1}</PagBtn>
               ))}
-
-              <button
-                disabled={page === totalPages - 1}
-                onClick={() => setPage(page + 1)}
-                className="px-4 py-2 bg-[#1e293b] rounded-lg disabled:opacity-30 hover:bg-[#334155] transition"
-              >
-                Next →
-              </button>
+              <PagBtn disabled={page === totalPages - 1} onClick={() => setPage(p => p + 1)} t={t} dark={dark}>Next →</PagBtn>
             </div>
           )}
         </>
       )}
 
-      {/* ── ALTERNATIVES MODAL ── */}
-      {showAlternatives && selectedMedicine && (
+      {showAlt && selectedMed && (
         <AlternativesMedicineModal
-          medicine={selectedMedicine}
+          medicine={selectedMed}
           userLocation={userLocation}
-          onClose={() => setShowAlternatives(false)}
-          onViewShop={(shopId) => navigate(`/shop/${shopId}`)}
+          onClose={() => setShowAlt(false)}
+          onViewShop={id => navigate(`/shop/${id}`)}
         />
       )}
     </div>
   );
 };
 
-// ── MEDICINE CARD COMPONENT (inline) ──────────────────────────────────────────
-const MedicineCard = ({ med, onViewShop, onAlternatives }) => {
-  const stockColor =
-    med.quantity > 50 ? "text-emerald-400" :
-    med.quantity > 10 ? "text-yellow-400" : "text-red-400";
+// ─── Medicine Card ─────────────────────────────────────────────────────────────
+const MedicineCard = ({ med, dark, t, onViewShop, onAlternatives }) => {
+  const [hov, setHov] = useState(false);
+  const sk = stockStyle(med.quantity, t, dark);
 
   return (
-    <div className="group bg-[#0f172a] rounded-2xl border border-white/10
-                    hover:border-emerald-400/40
-                    hover:shadow-[0_0_35px_rgba(16,185,129,0.2)]
-                    transition duration-300 overflow-hidden flex flex-col">
+    <div
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      className={hov ? "med-card-hover" : ""}
+      style={{
+        background: t.bgCard,
+        border: `2px solid ${hov ? t.blue : t.border}`,
+        borderRadius: 18,
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        transition: "border-color 0.25s ease, transform 0.25s cubic-bezier(.34,1.56,.64,1), box-shadow 0.25s ease",
+        transform: hov ? "translateY(-5px)" : "none",
+        // box-shadow handled by cardGlow animation when hov, otherwise static
+        ...(hov ? {} : {
+          boxShadow: dark ? "0 2px 12px rgba(0,0,0,0.5)" : "0 2px 10px rgba(0,0,0,0.06)",
+        }),
+      }}
+    >
+      {/* ── Top accent bar (visual card separator) ── */}
+      <div style={{
+        height: 3,
+        flexShrink: 0,
+        background: hov
+          ? t.blue
+          : `linear-gradient(90deg, transparent, ${t.blueBorder}, transparent)`,
+        transition: "background 0.3s ease",
+      }} />
 
-      {/* IMAGE */}
-      <div className="h-44 bg-[#1e293b] overflow-hidden relative">
+      {/* ── Image ── */}
+      <div style={{ position: "relative", height: 170, overflow: "hidden", background: t.inputBg, flexShrink: 0 }}>
         <img
           src={med.image || vitaminc}
           alt={med.medicineName}
-          className="h-full w-full object-cover group-hover:scale-110 transition duration-500"
-          onError={(e) => { e.target.src = vitaminc; }}
+          style={{
+            width: "100%", height: "100%", objectFit: "cover",
+            transition: "transform 0.45s ease",
+            transform: hov ? "scale(1.08)" : "scale(1)",
+          }}
+          onError={e => { e.target.src = vitaminc; }}
         />
         {med.discount > 0 && (
-          <span className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+          <span style={{
+            position: "absolute", top: 12, right: 12,
+            background: t.blue, color: "#fff",
+            fontSize: 11, fontWeight: 800,
+            padding: "4px 11px", borderRadius: 20,
+            boxShadow: "0 2px 8px rgba(37,99,235,0.4)",
+          }}>
             {med.discount}% OFF
           </span>
         )}
+        {/* bottom fade for seamless card body join */}
+        <div style={{
+          position: "absolute", bottom: 0, left: 0, right: 0, height: 28,
+          background: `linear-gradient(to top, ${t.bgCard}, transparent)`,
+        }} />
       </div>
 
-      {/* CONTENT */}
-      <div className="p-4 flex flex-col flex-1">
-        <h2 className="text-base font-bold text-emerald-400 leading-tight mb-1">
+      {/* ── Card Body ── */}
+      <div style={{ padding: "16px 18px 18px", display: "flex", flexDirection: "column", flex: 1 }}>
+
+        {/* Name */}
+        <p style={{ fontSize: 13, fontWeight: 800, color: t.blue, margin: "0 0 4px", lineHeight: 1.3 }}>
           {med.medicineName}
-        </h2>
-        <p className="text-gray-500 text-xs line-clamp-2 mb-3">{med.description}</p>
+        </p>
 
-        {/* PRICE */}
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-white font-bold text-lg">₹{med.specialPrice?.toFixed(2)}</span>
+        {/* Description */}
+        <p style={{
+          fontSize: 12, color: t.textMuted, margin: "0 0 12px", lineHeight: 1.5,
+          overflow: "hidden", display: "-webkit-box",
+          WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+        }}>
+          {med.description}
+        </p>
+
+        {/* ── separator: dashed ── */}
+        <div style={{ borderTop: `1px dashed ${t.border}`, marginBottom: 12 }} />
+
+        {/* Price */}
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 12 }}>
+          <span style={{ fontSize: 20, fontWeight: 800, color: t.text }}>
+            ₹{med.specialPrice?.toFixed(2)}
+          </span>
           {med.price !== med.specialPrice && (
-            <span className="line-through text-gray-600 text-sm">₹{med.price}</span>
+            <span style={{ fontSize: 12, color: t.textFaint, textDecoration: "line-through" }}>
+              ₹{med.price}
+            </span>
           )}
         </div>
 
-        {/* META */}
-        <div className="text-xs text-gray-500 space-y-1 mb-3">
-          {med.shopName && <p className="flex items-center gap-1"><span>🏥</span>{med.shopName}</p>}
-          {med.shopCity && <p className="flex items-center gap-1"><span>📍</span>{med.shopCity}</p>}
+        {/* Shop info */}
+        <div style={{ fontSize: 12, color: t.textMuted, display: "flex", flexDirection: "column", gap: 4, marginBottom: 10 }}>
+          {med.shopName  && <span>🏥 {med.shopName}</span>}
+          {med.shopCity  && <span>📍 {med.shopCity}</span>}
           {med.distance != null && (
-            <p className="text-cyan-400 font-medium flex items-center gap-1">
+            <span style={{ color: t.blue, fontWeight: 600 }}>
               🚗 {med.distance.toFixed(1)} km away
-            </p>
+            </span>
           )}
-          <p className={`font-medium ${stockColor}`}>
-            Stock: {med.quantity ?? "N/A"}
-          </p>
         </div>
 
-        {/* ACTIONS */}
-        <div className="mt-auto flex flex-col gap-2">
+        {/* ── separator: solid thin ── */}
+        <div style={{ borderTop: `1px solid ${t.border}`, marginBottom: 12, opacity: 0.5 }} />
+
+        {/* Stock badge */}
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 6,
+          borderRadius: 8, padding: "4px 10px",
+          fontSize: 11, fontWeight: 700,
+          width: "fit-content", marginBottom: 14,
+          ...sk,
+        }}>
+          <FiPackage size={11} /> Stock: {med.quantity ?? "N/A"}
+        </div>
+
+        {/* Buttons */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: "auto" }}>
           <button
             onClick={onViewShop}
-            className="w-full py-2 rounded-xl text-sm font-semibold text-black
-                       bg-gradient-to-r from-emerald-400 to-cyan-400
-                       hover:shadow-[0_0_15px_rgba(16,185,129,0.5)] transition"
+            style={{
+              padding: "11px 0", borderRadius: 11,
+              background: t.blue, color: "#fff",
+              fontWeight: 700, fontSize: 13,
+              border: "none", cursor: "pointer",
+              transition: "background 0.2s, transform 0.15s",
+              boxShadow: `0 2px 10px ${dark ? "rgba(37,99,235,0.3)" : "rgba(37,99,235,0.18)"}`,
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = t.blueLight; e.currentTarget.style.transform = "translateY(-1px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = t.blue; e.currentTarget.style.transform = "none"; }}
           >
             View Shop
           </button>
           <button
             onClick={onAlternatives}
-            className="w-full py-2 rounded-xl text-sm font-medium
-                       bg-[#1e293b] border border-white/10
-                       hover:border-cyan-400/40 hover:text-cyan-400 transition"
+            style={{
+              padding: "10px 0", borderRadius: 11,
+              background: "transparent", color: t.textMuted,
+              fontWeight: 500, fontSize: 13,
+              border: `1px solid ${t.border}`, cursor: "pointer",
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = t.blue; e.currentTarget.style.color = t.blue; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.textMuted; }}
           >
-            Alternatives
+            View Alternatives
           </button>
         </div>
       </div>
     </div>
   );
 };
+
+// ─── Pagination Button ─────────────────────────────────────────────────────────
+const PagBtn = ({ children, active, disabled, onClick, t, dark }) => (
+  <button
+    disabled={disabled}
+    onClick={onClick}
+    style={{
+      padding: "8px 16px",
+      borderRadius: 10,
+      fontSize: 13,
+      fontWeight: active ? 700 : 500,
+      cursor: disabled ? "not-allowed" : "pointer",
+      background: active ? t.blue : t.bgCard,
+      color: active ? "#fff" : t.textMuted,
+      border: `1px solid ${active ? t.blue : t.border}`,
+      opacity: disabled ? 0.35 : 1,
+      transition: "all 0.18s",
+      boxShadow: active
+        ? `0 2px 8px ${dark ? "rgba(37,99,235,0.35)" : "rgba(37,99,235,0.2)"}`
+        : "none",
+    }}
+  >
+    {children}
+  </button>
+);
 
 export default Medicines;

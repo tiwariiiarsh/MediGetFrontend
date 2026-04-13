@@ -11,6 +11,50 @@ import { useTheme } from "../../components/ThemeContext";
 
 const BASE = "http://localhost:8080/api";
 
+// ✅ Add this OUTSIDE SellerBilling component (at the top of the file)
+const MedSearchItem = ({ med, onAdd, t, GREEN, mediGet1 }) => {
+  const [hov, setHov] = useState(false);
+
+  return (
+    <div
+      key={med.medicineId}
+      onClick={() => onAdd(med)}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        display: "flex", alignItems: "center", gap: 14,
+        padding: "10px 14px", borderRadius: 12,
+        background: hov ? t.bgCardHov : t.bgAlt,
+        border: `1px solid ${hov ? GREEN + "50" : t.border}`,
+        cursor: "pointer", transition: "all 0.18s",
+      }}
+    >
+      <img
+        src={med.image ? `http://localhost:8080/images/${med.image}` : mediGet1}
+        alt={med.medicineName}
+        onError={(e) => { e.target.src = mediGet1; }}
+        style={{ width: 44, height: 44, borderRadius: 10, objectFit: "cover", flexShrink: 0 }}
+      />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ color: t.text, fontWeight: 600, fontSize: 13, margin: "0 0 3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {med.medicineName}
+        </p>
+        <p style={{ color: t.textMuted, fontSize: 11, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {med.description?.slice(0, 40)}...
+        </p>
+      </div>
+      <div style={{ textAlign: "right", flexShrink: 0 }}>
+        <p style={{ color: GREEN, fontWeight: 700, fontSize: 14, margin: "0 0 2px" }}>₹{med.specialPrice?.toFixed(2)}</p>
+        <p style={{ color: t.textMuted, fontSize: 11, margin: 0 }}>Stock: {med.quantity}</p>
+      </div>
+      <div style={{ width: 26, height: 26, borderRadius: 7, background: `${GREEN}20`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <FiPlus style={{ color: GREEN, fontSize: 14 }} />
+      </div>
+    </div>
+  );
+};
+
+
 const SellerBilling = () => {
   const { t, dark } = useTheme();
 
@@ -188,7 +232,7 @@ const SellerBilling = () => {
             </div>
 
             {/* Search results */}
-            {searchResult.length > 0 && (
+            {/* {searchResult.length > 0 && (
               <div style={{ marginTop:12, display:"flex", flexDirection:"column", gap:8 }}>
                 {searchResult.map(med => {
                   const [hov, setHov] = useState(false);
@@ -225,7 +269,23 @@ const SellerBilling = () => {
                   );
                 })}
               </div>
-            )}
+            )} */}
+{/* 
+            // ✅ CORRECT — use the new component in .map() */}
+{searchResult.length > 0 && (
+  <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+    {searchResult.map(med => (
+      <MedSearchItem
+        key={med.medicineId}
+        med={med}
+        onAdd={addToCart}
+        t={t}
+        GREEN={GREEN}
+        mediGet1={mediGet1}
+      />
+    ))}
+  </div>
+)}
 
             {searchTerm && searchResult.length === 0 && (
               <p style={{ color:t.textMuted, fontSize:13, textAlign:"center", marginTop:16, padding:"12px 0" }}>
