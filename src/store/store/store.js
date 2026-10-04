@@ -1,6 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { authReducer } from "../reducers/authReducer";
-import { medicineReducer } from "../reducers/MedicineReducer";
+import { medicineReducer } from "../reducers/medicineReducer";
 import { errorReducer } from "../reducers/errorReducer";
 
 export const store = configureStore({
