@@ -1,3 +1,4 @@
+import { BACKEND_URL } from "../api/api";
 // src/pages/Medicines.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -57,7 +58,7 @@ const Medicines = () => {
   const fetchMedicines = async (pageNumber = 0) => {
     try {
       setLoading(true); setIsSearching(false);
-      const res  = await fetch(`http://localhost:8080/api/public/medicines?pageNumber=${pageNumber}&pageSize=12`);
+      const res  = await fetch(`${BACKEND_URL}/api/public/medicines?pageNumber=${pageNumber}&pageSize=12`);
       const data = await res.json();
       setMedicines(data.content || []); setTotalPages(data.totalPages || 0);
     } catch (e) { console.error(e); }
@@ -68,7 +69,7 @@ const Medicines = () => {
     if (!userLocation) { alert("Please enable location."); return; }
     try {
       setLoading(true); setIsSearching(true); setPage(0);
-      const res  = await fetch(`http://localhost:8080/api/public/medicines/nearby?keyword=${keyword}&userLat=${userLocation.lat}&userLng=${userLocation.lng}&radiusKm=${radius}`);
+      const res  = await fetch(`${BACKEND_URL}/api/public/medicines/nearby?keyword=${keyword}&userLat=${userLocation.lat}&userLng=${userLocation.lng}&radiusKm=${radius}`);
       const data = await res.json();
       setMedicines(Array.isArray(data) ? data : []); setTotalPages(0);
     } catch (e) { console.error(e); }

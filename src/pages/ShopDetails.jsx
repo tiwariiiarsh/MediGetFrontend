@@ -1,3 +1,4 @@
+import { BACKEND_URL } from "../api/api";
 // src/pages/ShopDetails.jsx
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -40,7 +41,7 @@ const ShopDetails = () => {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`http://localhost:8080/api/public/shop/${shopId}`);
+        const res = await fetch(`${BACKEND_URL}/api/public/shop/${shopId}`);
         if (!res.ok) throw new Error();
         setShop(await res.json());
       } catch { setShop(null); }
@@ -277,7 +278,7 @@ const ShopDetails = () => {
           background: t.inputBg,
         }}>
           <img
-            src={shop.image ? `http://localhost:8080/images/${shop.image}` : mediGet1}
+            src={shop.image ? `${BACKEND_URL}/images/${shop.image}` : mediGet1}
             alt={shop.shopName}
             style={{
               position: "absolute",   // ← absolute fill: always covers entire div
@@ -382,7 +383,7 @@ const ShopMedCard = ({ med, t, dark }) => {
       {/* Image */}
       <div style={{ position: "relative", height: 150, overflow: "hidden", background: t.inputBg }}>
         <img
-          src={med.image ? `http://localhost:8080/images/${med.image}` : mediGet1}
+          src={med.image ? `${BACKEND_URL}/images/${med.image}` : mediGet1}
           alt={med.medicineName}
           style={{
             width: "100%", height: "100%", objectFit: "cover",

@@ -1,8 +1,10 @@
 import axios from "axios";
 
 
+export const BACKEND_URL = (import.meta.env.VITE_BACK_END_URL || "").replace(/\/+$/, "");
+
 const api  = axios.create({
-  baseURL:`${(import.meta.env.VITE_BACK_END_URL || "").replace(/\/+$/, "")}/api`,
+  baseURL:`${BACKEND_URL}/api`,
   withCredentials:true,
 });
 

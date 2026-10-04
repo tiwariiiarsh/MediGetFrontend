@@ -1,3 +1,4 @@
+import { BACKEND_URL } from "../../api/api";
 // src/pages/seller/SellerBilling.jsx
 // ─────────────────────────────────────────────────────────────────────────────
 // Reads theme from ThemeContext. No Tailwind. Full dark/light support.
@@ -9,7 +10,7 @@ import { MdReceiptLong } from "react-icons/md";
 import mediGet1 from "../../assets/mediget1.jpg";
 import { useTheme } from "../../components/ThemeContext";
 
-const BASE = "http://localhost:8080/api";
+const BASE = `${BACKEND_URL}/api`;
 
 // ✅ Add this OUTSIDE SellerBilling component (at the top of the file)
 const MedSearchItem = ({ med, onAdd, t, GREEN, mediGet1 }) => {
@@ -30,7 +31,7 @@ const MedSearchItem = ({ med, onAdd, t, GREEN, mediGet1 }) => {
       }}
     >
       <img
-        src={med.image ? `http://localhost:8080/images/${med.image}` : mediGet1}
+        src={med.image ? `${BACKEND_URL}/images/${med.image}` : mediGet1}
         alt={med.medicineName}
         onError={(e) => { e.target.src = mediGet1; }}
         style={{ width: 44, height: 44, borderRadius: 10, objectFit: "cover", flexShrink: 0 }}
@@ -249,7 +250,7 @@ const SellerBilling = () => {
                         cursor:"pointer", transition:"all 0.18s",
                       }}>
                       <img
-                        src={med.image ? `http://localhost:8080/images/${med.image}` : mediGet1}
+                        src={med.image ? `${BACKEND_URL}/images/${med.image}` : mediGet1}
                         alt={med.medicineName}
                         onError={(e) => { e.target.src = mediGet1; }}
                         style={{ width:44, height:44, borderRadius:10, objectFit:"cover", flexShrink:0 }}

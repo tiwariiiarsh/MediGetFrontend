@@ -1,3 +1,4 @@
+import { BACKEND_URL } from "../../api/api";
 // src/pages/seller/SellerMedicines.jsx
 
 import { useEffect, useState } from "react";
@@ -5,7 +6,7 @@ import { FiPlus, FiEdit3, FiTrash2, FiSearch, FiUpload, FiX, FiAlertTriangle, Fi
 import mediGet1 from "../../assets/mediget1.jpg";
 import { useTheme } from "../../components/ThemeContext";
 
-const BASE = "http://localhost:8080/api";
+const BASE = `${BACKEND_URL}/api`;
 
 const emptyForm = {
   medicineName:"", description:"", quantity:"",
@@ -53,7 +54,7 @@ const MedicineRow = ({ med, i, t, GREEN, AMBER, RED, CYAN, stockStyle, setImageM
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           <div style={{ width:38, height:38, borderRadius:9, overflow:"hidden", flexShrink:0, border:`1px solid ${t.border}` }}>
             <img
-              src={med.image ? `http://localhost:8080/images/${med.image}` : mediGet1}
+              src={med.image ? `${BACKEND_URL}/images/${med.image}` : mediGet1}
               alt={med.medicineName}
               onError={e => { e.target.src = mediGet1; }}
               style={{ width:"100%", height:"100%", objectFit:"cover" }}

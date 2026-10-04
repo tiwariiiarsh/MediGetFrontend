@@ -1,3 +1,4 @@
+import { BACKEND_URL } from "../api/api";
 // src/components/AlternativesMedicineModal.jsx
 // Shows alternatives for a medicine, sorted by sales count
 import { useEffect, useState } from "react";
@@ -15,7 +16,7 @@ const AlternativesMedicineModal = ({ medicine, userLocation, onClose, onViewShop
           ? `?userLat=${userLocation.lat}&userLng=${userLocation.lng}`
           : "";
         const res = await fetch(
-          `http://localhost:8080/api/public/medicines/${medicine.medicineId}/alternatives${params}`
+          `${BACKEND_URL}/api/public/medicines/${medicine.medicineId}/alternatives${params}`
         );
         const data = await res.json();
         setAlternatives(Array.isArray(data) ? data : []);

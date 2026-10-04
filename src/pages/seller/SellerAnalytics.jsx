@@ -1,3 +1,4 @@
+import { BACKEND_URL } from "../../api/api";
 // src/pages/seller/SellerAnalytics.jsx
 
 import { useEffect, useState } from "react";
@@ -7,7 +8,7 @@ import {
 } from "react-icons/fi";
 import { useTheme } from "../../components/ThemeContext";
 
-const BASE = "http://localhost:8080/api";
+const BASE = `${BACKEND_URL}/api`;
 
 const Panel = ({ children, t, style = {} }) => (
   <div style={{

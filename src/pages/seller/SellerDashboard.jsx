@@ -1,3 +1,4 @@
+import { BACKEND_URL } from "../../api/api";
 // src/pages/seller/SellerDashboard.jsx
 // ─────────────────────────────────────────────────────────────────────────────
 // Reads dark/t from ThemeContext — no props, no local theme state.
@@ -15,7 +16,7 @@ import {
 import { MdOutlineLocalPharmacy } from "react-icons/md";
 import { useTheme } from "../../components/ThemeContext";
 
-const BASE = "http://localhost:8080/api";
+const BASE = `${BACKEND_URL}/api`;
 
 // ─── REUSABLE CARD ────────────────────────────────────────────────────────────
 const Card = ({ children, t, alert = false, style = {}, onClick }) => {
