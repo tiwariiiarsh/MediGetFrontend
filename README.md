@@ -1,16 +1,112 @@
-# React + Vite
+# MediGet — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+MediGet helps people find medicines at nearby pharmacies, and gives pharmacy owners (sellers) a dashboard to manage their shop, stock, billing and sales.
 
-Currently, two official plugins are available:
+This repo is the React frontend. The Spring Boot backend lives in a separate repo (`MediGetBackend`).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+**Live:** https://medigetfrontend.onrender.com
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+**For users**
+- Search medicines and see which nearby shops have them (location + radius based)
+- View alternatives for a medicine
+- Shop detail page with available stock
+- Sign up / log in (JWT based)
+- Light / dark theme
 
-## Expanding the ESLint configuration
+**For sellers**
+- Create and manage your pharmacy shop
+- Add, edit and remove medicines
+- Billing
+- Sales analytics with charts
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Tech stack
+
+| Area | Tools |
+|------|-------|
+| Framework | React 19, Vite |
+| Routing | React Router 7 |
+| State | Redux Toolkit, React Redux |
+| HTTP | Axios (JWT attached automatically) |
+| Styling | Tailwind CSS 4, MUI |
+| Forms | React Hook Form |
+| Charts | Recharts |
+| Animation | GSAP, Swiper, react-parallax-tilt |
+| Notifications | react-hot-toast, react-toastify |
+| Contact form | EmailJS |
+
+## Getting started
+
+### Prerequisites
+- Node.js 20+
+- The MediGet backend running locally (default `http://localhost:8080`) or a deployed backend URL
+
+### Setup
+
+```bash
+git clone https://github.com/tiwariiiarsh/MediGetFrontend.git
+cd MediGetFrontend
+npm install
+```
+
+Create a `.env` file in the project root:
+
+```env
+VITE_BACK_END_URL=http://localhost:8080
+VITE_FRONTEND_URL=http://localhost:5173
+```
+
+> Don't put a trailing `/` on the backend URL (the app strips it anyway).
+
+### Run
+
+```bash
+npm run dev       # start dev server at http://localhost:5173
+npm run build     # production build into dist/
+npm run preview   # preview the production build
+npm run lint      # run ESLint
+```
+
+## Project structure
+
+```
+src/
+├── api/          # Axios instance + BACKEND_URL
+├── components/   # Navbar, Footer, modals, UI pieces
+├── pages/        # Home, Login, Signup, Medicines, ShopDetails, About, Contact
+│   └── seller/   # Seller dashboard, medicines, billing, analytics
+├── shared/       # Inputs, loaders, spinners
+├── store/        # Redux actions, reducers and store
+├── assets/ image/
+├── App.jsx       # Routes
+└── main.jsx      # Entry point
+```
+
+## Routes
+
+| Path | Page |
+|------|------|
+| `/` | Home |
+| `/login`, `/signup` | Auth |
+| `/medicines` | Search medicines |
+| `/shop/:shopId` | Shop details |
+| `/about`, `/contact` | Info pages |
+| `/seller` | Seller dashboard |
+| `/seller/medicines` | Manage medicines |
+| `/seller/billing` | Billing |
+| `/seller/analytics` | Analytics |
+
+## Deployment (Render static site)
+
+| Setting | Value |
+|---------|-------|
+| Build command | `npm install; npm run build` |
+| Publish directory | `dist` |
+| Env variable | `VITE_BACK_END_URL=https://mediget.onrender.com` |
+| Rewrite rule | `/*` → `/index.html` (so routes like `/login` work on refresh) |
+
+The backend must allow this frontend's origin through its `FRONTEND_URL` env variable, otherwise requests fail with a CORS error.
+
+## Notes
+- File imports are case-sensitive on Linux (Render), so import paths must match file names exactly.
