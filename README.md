@@ -108,5 +108,23 @@ src/
 
 The backend must allow this frontend's origin through its `FRONTEND_URL` env variable, otherwise requests fail with a CORS error.
 
+## CI (GitHub Actions)
+
+Workflows live in `.github/workflows/`. Render deploys the site automatically on every push to `main`.
+
+## Full stack with Docker
+
+The backend repo ships a `docker-compose.yml` that runs PostgreSQL and the API together. To run the whole app locally:
+
+```bash
+# in MediGetBackend
+cp .env.example .env && docker compose up -d --build   # API on :8080
+
+# in MediGetFrontend
+npm install && npm run dev                              # UI on :5173
+```
+
+See the [backend README](https://github.com/tiwariiiarsh/MediGet) for the pipeline, Docker and API details.
+
 ## Notes
 - File imports are case-sensitive on Linux (Render), so import paths must match file names exactly.
